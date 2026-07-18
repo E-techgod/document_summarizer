@@ -37,26 +37,26 @@ def main():
 
     document_text = load_and_validate_document(DOCUMENT_PATH) 
 
-    print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
+    #print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
 
     styles=["bullets", "executive", "technical"]
-    user_template = load_prompt_user_template(styles[0]) # User prompt (different versions) + the placeholder of the document
+    user_template = load_prompt_user_template(styles[2]) # User prompt (different versions) + the placeholder of the document
 
-    print(f"\n========================================================= RAW TEMPLATE: {styles[0]} =========================================================\n {user_template}")
+    #print(f"\n========================================================= RAW TEMPLATE: {styles[0]} =========================================================\n {user_template}")
 
     user_prompt = build_user_prompt(user_template, document_text) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
 
-    print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
+    #print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
 
     system_prompt= load_system_prompr()
 
-    print(f"\n========================================================= SYSTEM PROMPT =========================================================\n {system_prompt}")
+    #print(f"\n========================================================= SYSTEM PROMPT =========================================================\n {system_prompt}")
 
     client= create_client_groq()
 
     summary= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
 
-    print("\n========================================================= GENERATED SUMMARY ========================================================= \n")
+    print(f"\n========================================================= GENERATED SUMMARY: {styles[2]} ========================================================= \n")
     print(summary)
 
     word_count= count_words(summary)
