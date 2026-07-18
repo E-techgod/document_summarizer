@@ -19,7 +19,7 @@ def summarize_document(client: Groq, system_prompt: str, user_promt: str, model_
         temperature= 0.0
     )
 
-    summary = response.choices[0].message.content
+    summary = response.choices[0].message.content # Raw API/Modle call 
 
     if not summary:
         raise ValueError("The model returned an empty response.")

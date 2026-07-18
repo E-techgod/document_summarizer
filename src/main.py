@@ -30,30 +30,39 @@ DOCUMENT_FILE= "sample.txt"
 DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
 
+def count_words(text: str) -> int:
+    return len(text.split())
+
 def main():
 
     document_text = load_and_validate_document(DOCUMENT_PATH)
 
-    print(f"\n=============== Document to sumarize ===============n {document_text}")
+    print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
 
-    template = load_prompt_template("executive")
+    template = load_prompt_template("bullets")
 
-    print(f"\n=============== Prompt Version used ===============\n {template}")
+    print(f"\n========================================================= RAW TEMPLATE: executive_v1 =========================================================\n {template}")
 
     user_prompt = build_user_prompt(template, document_text)
 
-    print(f"\n=============== User Prompt used ===============\n {user_prompt}")
+    print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
 
     system_prompt= load_system_prompr()
 
-    print(f"\n=============== System Prompt used ===============\n {system_prompt}")
+    print(f"\n========================================================= SYSTEM PROMPT =========================================================\n {system_prompt}")
 
     client= create_client_groq()
 
-    #summary= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
+    summary= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
 
-    #print("\n=============== GENERATED SUMMARY ===============")
-    #print(summary)
+    print("\n========================================================= GENERATED SUMMARY ========================================================= \n")
+    print(summary)
+
+    word_count= count_words(summary)
+    print(f"\nSummary word count: {word_count} ")
+
+    if word_count > 250:
+        print("Warning: summary exceeded the requested 250-word limit.")
 
 if __name__ == "__main__":
     main() 
