@@ -9,6 +9,13 @@ Controls de application flow:
 5. Return summary
 
 This first version only allows .txt files, not pds, docs
+
+The first version of the pipeline:
+Load document
+      ↓
+Load selected prompt template
+      ↓
+Render document into the Jinja template
 """
 from pathlib import Path
 from document_loader import load_and_validate_document
