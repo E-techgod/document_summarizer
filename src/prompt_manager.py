@@ -1,12 +1,30 @@
 """
 Decides wich prompt to use based on user's input and fills in variables
 """
+from pathlib import Path
+from jinja2 import Template
 
-def load_system_prompt():
-    pass
+PROMPTS_DIR= Path(__file__).parent.parent / "prompts"
 
-def load_prompt_template():
-    pass
+PROMPT_FILES={
+    "executive": "executive_v1.txt",
+    "technical": "technical_v1.txt",
+    "bullets": "bullets_v1.txt",
+}
 
-def build_user_prompt():
-    pass
+SUMMARY_TEMPLATE= """
+Please summarize the following document cleanly:
+{{ document_text }}
+"""
+
+def load_prompt_template(style: str) -> str:
+    if style not in PROMPT_FILES:
+        raise ValueError(f"Unsupported summary style: {style}")
+    
+    PROMPT_PATH= PROMPTS_DIR / PROMPT_FILES[style]
+
+    return PROMPT_PATH.read_text(encoding="UTF-8")
+
+def build_user_prompt(template: str, document_text: str) -> str:
+    tmpl= Template(template)
+    return tmpl.render(document_text=document_text)
