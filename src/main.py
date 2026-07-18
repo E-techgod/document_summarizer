@@ -21,7 +21,7 @@ Render document into the Jinja template
 from pathlib import Path
 from llm_client import create_client_groq
 from document_loader import load_and_validate_document
-from prompt_manager import load_system_prompr, load_prompt_template, build_user_prompt
+from prompt_manager import load_system_prompr, load_prompt_user_template, build_user_prompt
 from summarizer import summarize_document
 
 PROJECT_DIRECTORY= Path(__file__).parent.parent 
@@ -35,15 +35,15 @@ def count_words(text: str) -> int:
 
 def main():
 
-    document_text = load_and_validate_document(DOCUMENT_PATH)
+    document_text = load_and_validate_document(DOCUMENT_PATH) 
 
     print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
 
-    template = load_prompt_template("bullets")
+    user_template = load_prompt_user_template("bullets") # User prompt (different versions) + the placeholder of the document
 
     print(f"\n========================================================= RAW TEMPLATE: executive_v1 =========================================================\n {template}")
 
-    user_prompt = build_user_prompt(template, document_text)
+    user_prompt = build_user_prompt(user_template, document_text) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
 
     print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
 

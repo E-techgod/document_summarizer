@@ -10,7 +10,7 @@ def load_and_validate_document(file_path: str) -> str:
     if path.suffix.lower() != ".txt":
         raise ValueError("Only '.txt' files are supported.")
     
-    text = path.read_text(encoding="UTF-8").strip()
+    text = path.read_text(encoding="utf-8").strip()
 
     if not text:
         raise ValueError("Document is empty.")

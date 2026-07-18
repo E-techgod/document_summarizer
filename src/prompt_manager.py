@@ -12,27 +12,27 @@ PROMPT_TEMPLATE_FILES={
     "bullets": "bullets_v1.txt",
 }
 
-PROMPT_SYSTEM_PATH= PROMPTS_DIR / "system.txt"
+PROMPT_SYSTEM_FILE= PROMPTS_DIR / "system.txt"
 
 # The {{}} needs to match whe using jinja2, if using replace then use {}
 SUMMARY_TEMPLATE= """
-Please summarize the following document cleanly:
+Please summarize the following document cleanly:  
 {{ document_text }} 
 """
 
 def load_system_prompr() -> str:
 
-    if not PROMPT_SYSTEM_PATH.exists():
-        raise FileNotFoundError(f"Prompt system file was not found in {PROMPT_SYSTEM_PATH}")
+    if not PROMPT_SYSTEM_FILE.exists():
+        raise FileNotFoundError(f"Prompt system file was not found in {PROMPT_SYSTEM_FILE}")
     
-    prompt = PROMPT_SYSTEM_PATH.read_text(encoding="utf-8").strip()
+    prompt = PROMPT_SYSTEM_FILE.read_text(encoding="utf-8").strip()
 
     if not prompt:
         raise ValueError("System prompt cannot be empty.")
     
     return prompt
 
-def load_prompt_template(style: str) -> str:
+def load_prompt_user_template(style: str) -> str: # Different user's prompt versions
 
     if style not in PROMPT_TEMPLATE_FILES:
         raise ValueError(f"Unsupported summary style: {style}")
@@ -46,6 +46,22 @@ def load_prompt_template(style: str) -> str:
     
     return prompt
 
-def build_user_prompt(template: str, document_text: str) -> str:
-    tmpl= Template(template)
-    return tmpl.render(document_text=document_text.strip())
+def build_user_prompt(user_template: str, document_text: str) -> str:
+    template= Template(user_template) # Here goes one of the users prompts variations
+    return template.render(document_text=document_text.strip()) # PROMPT + SUMMARY_TEMPLATE (RENDER of the DOC)
+
+
+"""
+PROMPT HERE 
+...... 
+
+
+RENDER PART HERE
+............
+DOCUMENT:
+<document>
+{{document_text}} 
+</document>
+............
+
+"""
