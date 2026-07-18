@@ -1,10 +1,8 @@
-from urllib import response
-
 from groq import Groq 
 
-def summarize_document(client: Groq, system_promt: str, user_promt: str, model_name: str) -> str:
+def summarize_document(client: Groq, system_prompt: str, user_promt: str, model_name: str) -> str:
 
-    if not system_promt.strip():
+    if not system_prompt.strip():
         raise ValueError("System prompt cannot be empty")
     
     if not user_promt.strip():
@@ -14,7 +12,7 @@ def summarize_document(client: Groq, system_promt: str, user_promt: str, model_n
         model= model_name,
 
         messages=[
-            {"role": "system", "content": system_promt},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_promt}
         ],
 
