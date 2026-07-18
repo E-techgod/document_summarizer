@@ -12,7 +12,7 @@ This first version only allows .txt files, not pds, docs
 """
 from pathlib import Path
 from document_loader import load_and_validate_document
-from prompt_manager import load_prompt_template, build_user_prompt
+from prompt_manager import load_prompt_template, build_user_prompt, SUMMARY_TEMPLATE
 
 PROJECT_DIRECTORY= Path(__file__).parent.parent 
 DOCS_DIRECTORY= "sample_documents"
@@ -20,10 +20,11 @@ DOCUMENT_FILE= "sample.txt"
 DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 
 def main():
+    document_text = load_and_validate_document(DOCUMENT_PATH)
 
-    document_text= load_and_validate_document(DOCUMENT_PATH)
-    template= load_prompt_template("executive")
-    final_prompt= build_user_prompt(template, document_text)
+    template = load_prompt_template("executive")
+
+    final_prompt = build_user_prompt(template, document_text)
 
     print(final_prompt)
 

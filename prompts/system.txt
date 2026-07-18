@@ -21,3 +21,8 @@ Return:
 1. Overview.
 2. Key technical points. 
 3. Risks or limitations. 
+
+DOCUMENT:
+<document>
+{{document_text}} 
+</document>
