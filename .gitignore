@@ -8,6 +8,7 @@ wheels/
 .DS_Store
 graphify-out/
 llm_context_payload.txt
+README_FACTS.md
 
 # Virtual environments
 .venv
