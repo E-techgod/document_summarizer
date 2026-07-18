@@ -1,11 +1,11 @@
 from groq import Groq 
 
-def summarize_document(client: Groq, system_prompt: str, user_promt: str, model_name: str) -> str:
+def summarize_document(client: Groq, system_prompt: str, user_prompt: str, model_name: str) -> str:
 
     if not system_prompt.strip():
         raise ValueError("System prompt cannot be empty")
     
-    if not user_promt.strip():
+    if not user_prompt.strip():
         raise ValueError("User prompt cannot be empty")
      
     response= client.chat.completions.create(
@@ -13,7 +13,7 @@ def summarize_document(client: Groq, system_prompt: str, user_promt: str, model_
 
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_promt}
+            {"role": "user", "content": user_prompt}
         ],
 
         temperature= 0.0

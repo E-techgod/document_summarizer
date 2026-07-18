@@ -39,9 +39,10 @@ def main():
 
     print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
 
-    user_template = load_prompt_user_template("bullets") # User prompt (different versions) + the placeholder of the document
+    styles=["bullets", "executive", "technical"]
+    user_template = load_prompt_user_template(styles[0]) # User prompt (different versions) + the placeholder of the document
 
-    print(f"\n========================================================= RAW TEMPLATE: executive_v1 =========================================================\n {template}")
+    print(f"\n========================================================= RAW TEMPLATE: {styles[0]} =========================================================\n {user_template}")
 
     user_prompt = build_user_prompt(user_template, document_text) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
 

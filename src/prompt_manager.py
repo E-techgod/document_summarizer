@@ -6,13 +6,13 @@ from jinja2 import Template
 
 PROMPTS_DIR= Path(__file__).parent.parent / "prompts"
 
-PROMPT_TEMPLATE_FILES={
+PROMPT_TEMPLATE_FILES ={
     "executive": "executive_v1.txt",
     "technical": "technical_v1.txt",
     "bullets": "bullets_v1.txt",
 }
 
-PROMPT_SYSTEM_FILE= PROMPTS_DIR / "system.txt"
+PROMPT_SYSTEM_FILE= PROMPTS_DIR / "system_prompt" / "system.txt"
 
 # The {{}} needs to match whe using jinja2, if using replace then use {}
 SUMMARY_TEMPLATE= """
@@ -37,7 +37,7 @@ def load_prompt_user_template(style: str) -> str: # Different user's prompt vers
     if style not in PROMPT_TEMPLATE_FILES:
         raise ValueError(f"Unsupported summary style: {style}")
     
-    PROMPT_PATH= PROMPTS_DIR / PROMPT_TEMPLATE_FILES[style]
+    PROMPT_PATH= PROMPTS_DIR / "user_prompts" / PROMPT_TEMPLATE_FILES[style]
 
     prompt= PROMPT_PATH.read_text(encoding="utf-8").strip()
 
