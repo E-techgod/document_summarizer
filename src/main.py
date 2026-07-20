@@ -29,6 +29,8 @@ DOCS_DIRECTORY= "sample_documents"
 DOCUMENT_FILE= "sample.txt" 
 DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
+MAX_WORDS= 250
+SUMMARY_STYLE=["bullets", "executive", "technical"]
 
 def count_words(text: str) -> int:
     return len(text.split())
@@ -38,11 +40,9 @@ def main():
     document_text = load_and_validate_document(DOCUMENT_PATH) 
 
     #print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
+    user_template = load_prompt_user_template(SUMMARY_STYLE[2]) # User prompt (different versions) + the placeholder of the document
 
-    styles=["bullets", "executive", "technical"]
-    user_template = load_prompt_user_template(styles[2]) # User prompt (different versions) + the placeholder of the document
-
-    #print(f"\n========================================================= RAW TEMPLATE: {styles[0]} =========================================================\n {user_template}")
+    #print(f"\n========================================================= RAW TEMPLATE: {SUMMARY_STYLE[0]} =========================================================\n {user_template}")
 
     user_prompt = build_user_prompt(user_template, document_text) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
 
@@ -56,13 +56,13 @@ def main():
 
     summary= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
 
-    print(f"\n========================================================= GENERATED SUMMARY: {styles[2]} ========================================================= \n")
+    print(f"\n========================================================= GENERATED SUMMARY: {SUMMARY_STYLE[2]} ========================================================= \n")
     print(summary)
 
     word_count= count_words(summary)
     print(f"\nSummary word count: {word_count} ")
 
-    if word_count > 250:
+    if word_count > MAX_WORDS:
         print("Warning: summary exceeded the requested 250-word limit.")
 
 if __name__ == "__main__":
