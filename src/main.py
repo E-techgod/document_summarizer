@@ -19,10 +19,14 @@ Render document into the Jinja template
 """
 
 from pathlib import Path
+from schema import SummaryOutput
 from llm_client import create_client_groq
+from summarizer import summarize_document
+from output_parser import parse_summary_response
 from document_loader import load_and_validate_document
 from prompt_manager import load_system_prompr, load_prompt_user_template, build_user_prompt
-from summarizer import summarize_document
+
+
 
 PROJECT_DIRECTORY= Path(__file__).parent.parent 
 DOCS_DIRECTORY= "sample_documents"
@@ -32,21 +36,18 @@ MODEL_NAME= "llama-3.1-8b-instant"
 MAX_WORDS= 250
 SUMMARY_STYLE=["bullets", "executive", "technical"]
 
-def count_words(text: str) -> int:
-    return len(text.split())
-
 def main():
 
     document_text = load_and_validate_document(DOCUMENT_PATH) 
 
     #print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
-    user_template = load_prompt_user_template(SUMMARY_STYLE[2]) # User prompt (different versions) + the placeholder of the document
+    user_template = load_prompt_user_template(SUMMARY_STYLE[0]) # User prompt (different versions) + the placeholder of the document
 
-    #print(f"\n========================================================= RAW TEMPLATE: {SUMMARY_STYLE[0]} =========================================================\n {user_template}")
+    # print(f"\n========================================================= RAW TEMPLATE: {SUMMARY_STYLE[0]} =========================================================\n {user_template}")
 
     user_prompt = build_user_prompt(user_template, document_text) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
 
-    #print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
+    print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
 
     system_prompt= load_system_prompr()
 
@@ -56,14 +57,11 @@ def main():
 
     summary= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
 
+
+
     print(f"\n========================================================= GENERATED SUMMARY: {SUMMARY_STYLE[2]} ========================================================= \n")
     print(summary)
 
-    word_count= count_words(summary)
-    print(f"\nSummary word count: {word_count} ")
-
-    if word_count > MAX_WORDS:
-        print("Warning: summary exceeded the requested 250-word limit.")
 
 if __name__ == "__main__":
     main() 

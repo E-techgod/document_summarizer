@@ -1,24 +1,16 @@
 """
 Decides wich prompt to use based on user's input and fills in variables
 """
+import sys
 from pathlib import Path
 from jinja2 import Template
+from templates.prompt_template_files import PROMPT_TEMPLATE_FILES
 
 PROMPTS_DIR= Path(__file__).parent.parent / "prompts"
-
-PROMPT_TEMPLATE_FILES ={
-    "executive": "executive_v1.txt",
-    "technical": "technical_v1.txt",
-    "bullets": "bullets_v1.txt",
-}
 
 PROMPT_SYSTEM_FILE= PROMPTS_DIR / "system_prompt" / "system.txt"
 
 # The {{}} needs to match whe using jinja2, if using replace then use {}
-SUMMARY_TEMPLATE= """
-Please summarize the following document cleanly:  
-{{ document_text }} 
-"""
 
 def load_system_prompr() -> str:
 
@@ -46,9 +38,9 @@ def load_prompt_user_template(style: str) -> str: # Different user's prompt vers
     
     return prompt
 
-def build_user_prompt(user_template: str, document_text: str) -> str:
+def build_user_prompt(user_template: str, document_text: str, style: str, max_words: int, output_instructions: str) -> str:
     template= Template(user_template) # Here goes one of the users prompts variations
-    return template.render(document_text=document_text.strip()) # PROMPT + SUMMARY_TEMPLATE (RENDER of the DOC)
+    return template.render(document_text=document_text.strip(), style=style, max_words=max_words, output_instructions=output_instructions) # PROMPT + SUMMARY_TEMPLATE (RENDER of the DOC)
 
 
 """
