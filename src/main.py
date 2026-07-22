@@ -33,6 +33,12 @@ DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
 MAX_WORDS= 250
 SUMMARY_STYLE="bullets" # Options: "bullets", "executive", "technical"
+SUMMARY_OUTPUT_PATH = (PROJECT_DIRECTORY / "summary_output_json" / f"{DOCUMENT_PATH.stem}_summary.json")
+
+def write_summary_json(summary: SummaryOutput, output_path: Path) -> Path:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(summary.model_dump_json(indent=2), encoding="utf-8")
+    return output_path
 
 def main():
 
@@ -61,8 +67,11 @@ def main():
 
     validate_max_words(summary, MAX_WORDS)
 
+    output_path = write_summary_json(summary, SUMMARY_OUTPUT_PATH)
+
     print(f"\n========================================================= VALIDATED SUMMARY: {SUMMARY_STYLE} ========================================================= \n")
     print(summary.model_dump_json(indent=2))
+    print(f"\n Summary JSON saved to: {output_path}")
 
     print(f"\n Word count: {count_summary_words(summary)}")
 

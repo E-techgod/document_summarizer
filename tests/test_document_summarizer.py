@@ -232,6 +232,17 @@ def test_build_user_prompt_propagates_render_failures(prompt_manager_module, mon
         )
 
 
+def test_write_summary_json_persists_validated_payload(main_module, valid_summary_payload, tmp_path):
+    summary = importlib.import_module("schema").SummaryOutput.model_validate(valid_summary_payload)
+    output_path = tmp_path / "summaries" / "sample_summary.json"
+
+    written_path = main_module.write_summary_json(summary, output_path)
+
+    assert written_path == output_path
+    assert output_path.exists()
+    assert json.loads(output_path.read_text(encoding="utf-8")) == valid_summary_payload
+
+
 def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monkeypatch, valid_summary_payload, capsys):
     summary = importlib.import_module("schema").SummaryOutput.model_validate(valid_summary_payload)
     calls = []
@@ -264,12 +275,18 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
     monkeypatch.setattr(main_module, "validate_request_style", lambda parsed_summary, requested_style: calls.append(("style", parsed_summary.style, requested_style)))
     monkeypatch.setattr(main_module, "validate_max_words", lambda parsed_summary, max_words: calls.append(("words", max_words)))
     monkeypatch.setattr(main_module, "count_summary_words", lambda parsed_summary: 9)
+    monkeypatch.setattr(
+        main_module,
+        "write_summary_json",
+        lambda parsed_summary, output_path: calls.append(("write", parsed_summary.title, output_path)) or output_path,
+    )
 
     main_module.main()
 
     stdout = capsys.readouterr().out
     assert "RENDERED USER PROMPT" in stdout
     assert "VALIDATED SUMMARY" in stdout
+    assert "Summary JSON saved to:" in stdout
     assert '"style": "bullets"' in stdout
     assert "Word count: 9" in stdout
     assert [call[0] for call in calls] == [
@@ -282,6 +299,7 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
         "parse",
         "style",
         "words",
+        "write",
     ]
 
 
@@ -324,3 +342,31 @@ def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
 
     with pytest.raises(main_module.SummaryParsingError, match="invalid response"):
         main_module.main()
+
+
+def test_main_does_not_write_json_when_style_validation_fails(main_module, monkeypatch, valid_summary_payload):
+    summary = importlib.import_module("schema").SummaryOutput.model_validate(valid_summary_payload)
+    write_calls = []
+
+    monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
+    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style: "Prompt template")
+    monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: "Rendered prompt")
+    monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
+    monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
+    monkeypatch.setattr(main_module, "summarize_document", lambda *args, **kwargs: '{"title":"unused"}')
+    monkeypatch.setattr(
+        main_module.SummaryParsingError,
+        "parse_summary_response",
+        staticmethod(lambda response: summary),
+    )
+    monkeypatch.setattr(
+        main_module,
+        "validate_request_style",
+        lambda parsed_summary, requested_style: (_ for _ in ()).throw(ValueError("wrong style")),
+    )
+    monkeypatch.setattr(main_module, "write_summary_json", lambda parsed_summary, output_path: write_calls.append(output_path))
+
+    with pytest.raises(ValueError, match="wrong style"):
+        main_module.main()
+
+    assert write_calls == []
