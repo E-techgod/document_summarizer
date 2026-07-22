@@ -38,7 +38,8 @@ narrows that down for a different reader:
 
 All three are capped at 250 words. After the model responds, `main.py` parses
 the JSON, validates it against a Pydantic schema, checks that the returned
-style matches the requested style, and counts words across the summary body.
+style matches the requested style, enforces the 250-word cap, and requires at
+least one `key_points` item.
 
 ## Setup
 
@@ -54,6 +55,18 @@ Add your Groq key to a `.env` file in the project root:
 GROQ_API_KEY=your-key-here
 ```
 
+## Testing
+
+Run the automated test suite with:
+
+```bash
+uv run pytest -q
+```
+
+The current tests cover schema validation, JSON parsing failures, prompt
+rendering, style enforcement, word-limit validation, and the main workflow with
+mocked dependencies.
+
 ## Running it
 
 ```bash
@@ -65,6 +78,9 @@ it always summarizes `sample_documents/sample.txt` using the **bullets**
 style, with `llama-3.1-8b-instant` as the model. Swap the style by editing
 the `SUMMARY_STYLE` constant in `main.py`, or point `DOCUMENT_PATH` at a different
 `.txt` file, until argument parsing lands.
+
+During a run, `main.py` currently prints the rendered user prompt, the validated
+JSON summary, and the final summary word count.
 
 ## Project layout
 
@@ -87,4 +103,4 @@ the `SUMMARY_STYLE` constant in `main.py`, or point `DOCUMENT_PATH` at a differe
 - No CLI argument handling yet (planned: pick a file or paste text directly,
   pick a style at the command line).
 - `src/templates/summary_template.py` is currently unused.
-- No automated tests yet.
+- Automated tests are in `tests/test_document_summarizer.py`.
