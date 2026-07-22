@@ -2,7 +2,8 @@
 
 A small pipeline that turns a `.txt` document into an audience-tailored summary
 using the Groq API. Load a document, pick a prompt style, render it into a
-Jinja2 template, send it to the model, print the result.
+Jinja2 template, send it to the model, validate the structured response, print
+the result.
 
 This is the first version of the pipeline:
 
@@ -15,7 +16,9 @@ Render document into the template
       ↓
 Call the model
       ↓
-Print summary + word count
+Parse and validate JSON summary
+      ↓
+Print validated summary + word count
 ```
 
 Only `.txt` files are supported for now — no PDFs, no Word docs.
@@ -33,8 +36,9 @@ narrows that down for a different reader:
 - **bullets** — for a non-technical/beginner audience: 10 bullet points
   covering the same three areas, casual tone.
 
-All three are capped at 250 words. After the model responds, `main.py` counts
-words itself and prints a warning if the summary ran over.
+All three are capped at 250 words. After the model responds, `main.py` parses
+the JSON, validates it against a Pydantic schema, checks that the returned
+style matches the requested style, and counts words across the summary body.
 
 ## Setup
 
@@ -57,22 +61,23 @@ uv run src/main.py
 ```
 
 Right now the entry point is hardcoded, not wired up to CLI arguments yet:
-it always summarizes `sample_documents/sample.txt` using the **technical**
+it always summarizes `sample_documents/sample.txt` using the **bullets**
 style, with `llama-3.1-8b-instant` as the model. Swap the style by editing
-the `styles[...]` index in `main.py`, or point `DOCUMENT_PATH` at a different
+the `SUMMARY_STYLE` constant in `main.py`, or point `DOCUMENT_PATH` at a different
 `.txt` file, until argument parsing lands.
 
 ## Project layout
 
-- `src/main.py` — entry point; wires the pipeline together.
+- `src/main.py` — entry point; wires the pipeline together with hardcoded
+  defaults for the current run.
 - `src/document_loader.py` — reads and validates the source `.txt` file.
 - `src/prompt_manager.py` — loads the system prompt and the chosen style
   template, renders the document into it via Jinja2.
 - `src/llm_client.py` — builds the Groq client from `GROQ_API_KEY`.
 - `src/summarizer.py` — sends the prompts to Groq and returns the summary.
-- `src/output_parser.py` — placeholder for structured (JSON) output parsing
-  and schema validation; not implemented yet, and not currently called from
-  the pipeline (today's output is plain text).
+- `src/output_parser.py` — parses the model's JSON output, validates it
+  against the schema, checks style, and enforces the word cap.
+- `src/schema.py` — defines the structured summary shape with Pydantic.
 - `prompts/` — system prompt and the three user-prompt style templates.
 - `sample_documents/sample.txt` — the sample input used by the current
   hardcoded run.
@@ -81,6 +86,5 @@ the `styles[...]` index in `main.py`, or point `DOCUMENT_PATH` at a different
 
 - No CLI argument handling yet (planned: pick a file or paste text directly,
   pick a style at the command line).
-- `output_parser.py` is a stub — summaries aren't parsed/validated as
-  structured JSON yet.
+- `src/templates/summary_template.py` is currently unused.
 - No automated tests yet.
