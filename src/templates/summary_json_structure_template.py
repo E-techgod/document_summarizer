@@ -3,6 +3,8 @@ Return only valid JSON.
 
 Do not use Markdown code fences.
 Do not add text before or after the JSON.
+The "style" field is the summary format identifier, not the audience or tone.
+Set "style" exactly to "{{ style }}". Do not use values like "casual", "beginner", or "technical tone".
 
 Use exactly this structure:
 

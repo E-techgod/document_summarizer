@@ -38,11 +38,16 @@ def load_prompt_user_template(style: str) -> str: # Different user's prompt vers
     
     return prompt
 
+def render_output_instructions(output_instructions: str, style: str, max_words: int) -> str:
+    template = Template(output_instructions)
+    return template.render(style=style, max_words=max_words).strip()
+
 def build_user_prompt(user_template: str, document_text: str, style: str, max_words: int, output_instructions: str) -> str:
     template= Template(user_template) # Here goes one of the users prompts variations
-    return template.render(document_text=document_text.strip(), style=style, max_words=max_words, output_instructions=output_instructions) # PROMPT + SUMMARY_TEMPLATE (RENDER of the DOC)
-
-
+    rendered_output_instructions = render_output_instructions(output_instructions, style, max_words)
+    return template.render(document_text=document_text.strip(), style=style,max_words=max_words,output_instructions=rendered_output_instructions) 
+    # PROMPT + SUMMARY_TEMPLATE (RENDER of the DOC)
+    
 """
 PROMPT HERE 
 ...... 

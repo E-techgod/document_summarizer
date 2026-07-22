@@ -10,12 +10,14 @@ CONTEXT:
 The reader do not understand Python and APIs, they are begining their journey in the tech world.
 
 CONSTRAINTS:
-- Use a casual, simple tone for the audience to understand
+- Use a simple tone for the audience to understand
 - Use only information found in the document
 - Do not invent facts 
 - Preserve important numbers and technical terms 
 - State when information is missing 
 - Keep it under 250 words 
+- The requested summary format identifier is "{{ style }}"
+- In the JSON output, the "style" field must be exactly "{{ style }}"; it must not describe tone, audience, or difficulty level
 
 USE THIS WHEN: Your audience is a beginer and needs the bullet point version
 

@@ -17,16 +17,14 @@ Load selected prompt template
       ↓
 Render document into the Jinja template
 """
-
 from pathlib import Path
 from schema import SummaryOutput
 from llm_client import create_client_groq
 from summarizer import summarize_document
-from output_parser import parse_summary_response
 from document_loader import load_and_validate_document
+from templates.summary_json_structure_template import JSON_OUTPUT_INSTRUCTIONS
 from prompt_manager import load_system_prompr, load_prompt_user_template, build_user_prompt
-
-
+from output_parser import SummaryParsingError, validate_request_style, count_summary_words, validate_max_words
 
 PROJECT_DIRECTORY= Path(__file__).parent.parent 
 DOCS_DIRECTORY= "sample_documents"
@@ -34,18 +32,18 @@ DOCUMENT_FILE= "sample.txt"
 DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
 MAX_WORDS= 250
-SUMMARY_STYLE=["bullets", "executive", "technical"]
+SUMMARY_STYLE="bullets" # Options: "bullets", "executive", "technical"
 
 def main():
 
     document_text = load_and_validate_document(DOCUMENT_PATH) 
 
     #print(f"\n========================================================= SOURCE DOCUMENT  =========================================================\n {document_text}")
-    user_template = load_prompt_user_template(SUMMARY_STYLE[0]) # User prompt (different versions) + the placeholder of the document
+    user_template = load_prompt_user_template(SUMMARY_STYLE) # User prompt (different versions) + the placeholder of the document
 
-    # print(f"\n========================================================= RAW TEMPLATE: {SUMMARY_STYLE[0]} =========================================================\n {user_template}")
+    # print(f"\n========================================================= RAW TEMPLATE: {SUMMARY_STYLE} =========================================================\n {user_template}")
 
-    user_prompt = build_user_prompt(user_template, document_text) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
+    user_prompt = build_user_prompt(user_template, document_text, SUMMARY_STYLE, MAX_WORDS, JSON_OUTPUT_INSTRUCTIONS) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
 
     print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
 
@@ -55,12 +53,18 @@ def main():
 
     client= create_client_groq()
 
-    summary= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
+    raw_reponse= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
 
+    summary= SummaryParsingError.parse_summary_response(raw_reponse)
 
+    validate_request_style(summary, SUMMARY_STYLE)
 
-    print(f"\n========================================================= GENERATED SUMMARY: {SUMMARY_STYLE[2]} ========================================================= \n")
-    print(summary)
+    validate_max_words(summary, MAX_WORDS)
+
+    print(f"\n========================================================= VALIDATED SUMMARY: {SUMMARY_STYLE} ========================================================= \n")
+    print(summary.model_dump_json(indent=2))
+
+    print(f"\n Word count: {count_summary_words(summary)}")
 
 
 if __name__ == "__main__":
