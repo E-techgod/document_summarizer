@@ -30,9 +30,9 @@ def validate_request_style(summary: SummaryOutput, requested_style: str) -> None
 def count_summary_words(summary: SummaryOutput) -> int:
     """ Counts only the meaningful sections"""
     sections=[
-        summary.overview
-        *summary.key_points
-        **summary.risks_or_limitations
+        summary.overview,
+        *summary.key_points,
+        *summary.risks_or_limitations,
     ]
 
     combined_sections= " ".join(sections)
