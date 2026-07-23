@@ -103,7 +103,9 @@ def test_summary_output_rejects_extra_fields(schema_module, valid_summary_payloa
         schema_module.SummaryOutput.model_validate(invalid_payload)
 
 
-def test_summary_output_rejects_missing_required_fields(schema_module, valid_summary_payload):
+def test_summary_output_rejects_missing_required_fields(
+    schema_module, valid_summary_payload
+):
     invalid_payload = dict(valid_summary_payload)
     invalid_payload.pop("overview")
 
@@ -111,58 +113,86 @@ def test_summary_output_rejects_missing_required_fields(schema_module, valid_sum
         schema_module.SummaryOutput.model_validate(invalid_payload)
 
 
-def test_parse_summary_response_returns_summary_model(output_parser_module, valid_summary_json):
-    summary = output_parser_module.SummaryParsingError.parse_summary_response(valid_summary_json)
+def test_parse_summary_response_returns_summary_model(
+    output_parser_module, valid_summary_json
+):
+    summary = output_parser_module.SummaryParsingError.parse_summary_response(
+        valid_summary_json
+    )
 
     assert summary.title == "API Integration Summary"
     assert summary.style == "bullets"
 
 
-def test_parse_summary_response_raises_for_empty_llm_response(output_parser_module, empty_response):
-    with pytest.raises(output_parser_module.SummaryParsingError, match="empty response"):
+def test_parse_summary_response_raises_for_empty_llm_response(
+    output_parser_module, empty_response
+):
+    with pytest.raises(
+        output_parser_module.SummaryParsingError, match="empty response"
+    ):
         output_parser_module.SummaryParsingError.parse_summary_response(empty_response)
 
 
-def test_parse_summary_response_raises_for_malformed_json(output_parser_module, invalid_json_response):
+def test_parse_summary_response_raises_for_malformed_json(
+    output_parser_module, invalid_json_response
+):
     with pytest.raises(output_parser_module.SummaryParsingError, match="invalid json"):
-        output_parser_module.SummaryParsingError.parse_summary_response(invalid_json_response)
+        output_parser_module.SummaryParsingError.parse_summary_response(
+            invalid_json_response
+        )
 
 
-def test_parse_summary_response_raises_for_schema_validation_failures(output_parser_module, valid_summary_payload):
+def test_parse_summary_response_raises_for_schema_validation_failures(
+    output_parser_module, valid_summary_payload
+):
     invalid_payload = dict(valid_summary_payload)
     invalid_payload["key_points"] = ""
 
-    with pytest.raises(output_parser_module.SummaryParsingError, match="schema validation"):
-        output_parser_module.SummaryParsingError.parse_summary_response(json.dumps(invalid_payload))
+    with pytest.raises(
+        output_parser_module.SummaryParsingError, match="schema validation"
+    ):
+        output_parser_module.SummaryParsingError.parse_summary_response(
+            json.dumps(invalid_payload)
+        )
 
 
-def test_validate_request_style_passes_for_matching_style(output_parser_module, schema_module, valid_summary_payload):
+def test_validate_request_style_passes_for_matching_style(
+    output_parser_module, schema_module, valid_summary_payload
+):
     summary = schema_module.SummaryOutput.model_validate(valid_summary_payload)
 
     output_parser_module.validate_request_style(summary, "bullets")
 
 
-def test_validate_request_style_raises_for_wrong_style(output_parser_module, schema_module, wrong_style_payload):
+def test_validate_request_style_raises_for_wrong_style(
+    output_parser_module, schema_module, wrong_style_payload
+):
     summary = schema_module.SummaryOutput.model_validate(wrong_style_payload)
 
     with pytest.raises(ValueError, match="wrong summary style"):
         output_parser_module.validate_request_style(summary, "bullets")
 
 
-def test_validate_max_words_passes_when_within_limit(output_parser_module, schema_module, valid_summary_payload):
+def test_validate_max_words_passes_when_within_limit(
+    output_parser_module, schema_module, valid_summary_payload
+):
     summary = schema_module.SummaryOutput.model_validate(valid_summary_payload)
 
     output_parser_module.validate_max_words(summary, 100)
 
 
-def test_validate_max_words_raises_when_summary_exceeds_limit(output_parser_module, schema_module, oversized_summary_payload):
+def test_validate_max_words_raises_when_summary_exceeds_limit(
+    output_parser_module, schema_module, oversized_summary_payload
+):
     summary = schema_module.SummaryOutput.model_validate(oversized_summary_payload)
 
     with pytest.raises(ValueError, match="maximum allowed"):
         output_parser_module.validate_max_words(summary, 250)
 
 
-def test_count_summary_words_counts_only_meaningful_sections(output_parser_module, schema_module, valid_summary_payload):
+def test_count_summary_words_counts_only_meaningful_sections(
+    output_parser_module, schema_module, valid_summary_payload
+):
     summary = schema_module.SummaryOutput.model_validate(valid_summary_payload)
 
     word_count = output_parser_module.count_summary_words(summary)
@@ -228,7 +258,9 @@ def test_build_user_prompt_strips_document_edges(prompt_manager_module):
 
 
 @pytest.mark.parametrize("style", ["bullets", "executive", "technical"])
-def test_real_prompt_templates_include_rendered_json_output_instructions(prompt_manager_module, style):
+def test_real_prompt_templates_include_rendered_json_output_instructions(
+    prompt_manager_module, style
+):
     user_template = prompt_manager_module.load_prompt_user_template(style, "v1")
 
     prompt = prompt_manager_module.build_user_prompt(
@@ -247,11 +279,15 @@ def test_real_prompt_templates_include_rendered_json_output_instructions(prompt_
     assert "{{ style }}" not in prompt
 
 
-def test_build_user_prompt_propagates_render_failures(prompt_manager_module, monkeypatch):
+def test_build_user_prompt_propagates_render_failures(
+    prompt_manager_module, monkeypatch
+):
     def broken_renderer(*_args, **_kwargs):
         raise ValueError("output instructions failed")
 
-    monkeypatch.setattr(prompt_manager_module, "render_output_instructions", broken_renderer)
+    monkeypatch.setattr(
+        prompt_manager_module, "render_output_instructions", broken_renderer
+    )
 
     with pytest.raises(ValueError, match="output instructions failed"):
         prompt_manager_module.build_user_prompt(
@@ -264,7 +300,9 @@ def test_build_user_prompt_propagates_render_failures(prompt_manager_module, mon
         )
 
 
-def test_parse_summary_response_extracts_json_after_thinking_block(output_parser_module):
+def test_parse_summary_response_extracts_json_after_thinking_block(
+    output_parser_module,
+):
     response = """
 <thinking>
 - Fact 1
@@ -309,7 +347,12 @@ def test_parse_summary_response_normalizes_prompt_specific_shape(output_parser_m
         response,
         requested_style="technical",
         requested_version="v3",
-        example_output_keys=("overview", "key_technical_points", "risks_or_limitations", "style"),
+        example_output_keys=(
+            "overview",
+            "key_technical_points",
+            "risks_or_limitations",
+            "style",
+        ),
     )
 
     assert summary.style == "technical"
@@ -321,8 +364,12 @@ def test_parse_summary_response_normalizes_prompt_specific_shape(output_parser_m
     assert summary.risks_or_limitations == ["Migration guide not yet published"]
 
 
-def test_write_summary_json_persists_validated_payload(main_module, valid_summary_payload, tmp_path):
-    summary = importlib.import_module("schema").SummaryOutput.model_validate(valid_summary_payload)
+def test_write_summary_json_persists_validated_payload(
+    main_module, valid_summary_payload, tmp_path
+):
+    summary = importlib.import_module("schema").SummaryOutput.model_validate(
+        valid_summary_payload
+    )
     output_path = tmp_path / "summaries" / "sample_summary.json"
 
     written_path = main_module.write_summary_json(summary, output_path)
@@ -351,7 +398,10 @@ def test_load_prompt_user_template_uses_requested_version(prompt_manager_module)
     prompt = prompt_manager_module.load_prompt_user_template("technical", "v2")
 
     assert 'The requested summary format identifier is "{{ style }}".' in prompt
-    assert "USE THIS WHEN: Your audience is a technical engineer who need the technical version" in prompt
+    assert (
+        "USE THIS WHEN: Your audience is a technical engineer who need the technical version"
+        in prompt
+    )
 
 
 def test_load_prompt_user_template_rejects_unsupported_version(prompt_manager_module):
@@ -359,22 +409,51 @@ def test_load_prompt_user_template_rejects_unsupported_version(prompt_manager_mo
         prompt_manager_module.load_prompt_user_template("technical", "v9")
 
 
-def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monkeypatch, valid_summary_payload, capsys):
-    summary = importlib.import_module("schema").SummaryOutput.model_validate(valid_summary_payload)
+def test_main_runs_complete_workflow_with_mocked_dependencies(
+    main_module, monkeypatch, valid_summary_payload, capsys
+):
+    summary = importlib.import_module("schema").SummaryOutput.model_validate(
+        valid_summary_payload
+    )
     calls = []
 
-    monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: calls.append(("document", path)) or "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: calls.append(("template", style, version)) or "Prompt {{ document_text }}")
+    monkeypatch.setattr(
+        main_module,
+        "load_and_validate_document",
+        lambda path: calls.append(("document", path)) or "Loaded document",
+    )
+    monkeypatch.setattr(
+        main_module,
+        "load_prompt_user_template",
+        lambda style, version: calls.append(("template", style, version))
+        or "Prompt {{ document_text }}",
+    )
     monkeypatch.setattr(
         main_module,
         "build_prompt_contract",
         lambda user_template, document_text, style, version, max_words, output_instructions: calls.append(
-            ("prompt", user_template, document_text, style, version, max_words, output_instructions)
+            (
+                "prompt",
+                user_template,
+                document_text,
+                style,
+                version,
+                max_words,
+                output_instructions,
+            )
         )
-        or types.SimpleNamespace(rendered_prompt="Rendered prompt", example_output_keys=("title", "style")),
+        or types.SimpleNamespace(
+            rendered_prompt="Rendered prompt", example_output_keys=("title", "style")
+        ),
     )
-    monkeypatch.setattr(main_module, "load_system_prompr", lambda: calls.append(("system",)) or "System prompt")
-    monkeypatch.setattr(main_module, "create_client_groq", lambda: calls.append(("client",)) or object())
+    monkeypatch.setattr(
+        main_module,
+        "load_system_prompr",
+        lambda: calls.append(("system",)) or "System prompt",
+    )
+    monkeypatch.setattr(
+        main_module, "create_client_groq", lambda: calls.append(("client",)) or object()
+    )
     monkeypatch.setattr(
         main_module,
         "summarize_document",
@@ -390,18 +469,37 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
         "parse_summary_response",
         staticmethod(
             lambda response, requested_style=None, requested_version=None, example_output_keys=(): calls.append(
-                ("parse", response, requested_style, requested_version, example_output_keys)
+                (
+                    "parse",
+                    response,
+                    requested_style,
+                    requested_version,
+                    example_output_keys,
+                )
             )
             or summary
         ),
     )
-    monkeypatch.setattr(main_module, "validate_request_style", lambda parsed_summary, requested_style: calls.append(("style", parsed_summary.style, requested_style)))
-    monkeypatch.setattr(main_module, "validate_max_words", lambda parsed_summary, max_words: calls.append(("words", max_words)))
+    monkeypatch.setattr(
+        main_module,
+        "validate_request_style",
+        lambda parsed_summary, requested_style: calls.append(
+            ("style", parsed_summary.style, requested_style)
+        ),
+    )
+    monkeypatch.setattr(
+        main_module,
+        "validate_max_words",
+        lambda parsed_summary, max_words: calls.append(("words", max_words)),
+    )
     monkeypatch.setattr(main_module, "count_summary_words", lambda parsed_summary: 9)
     monkeypatch.setattr(
         main_module,
         "write_summary_json",
-        lambda parsed_summary, output_path: calls.append(("write", parsed_summary.title, output_path)) or output_path,
+        lambda parsed_summary, output_path: calls.append(
+            ("write", parsed_summary.title, output_path)
+        )
+        or output_path,
     )
 
     main_module.main()
@@ -429,11 +527,27 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
 def test_main_stops_after_document_loading_failure(main_module, monkeypatch):
     downstream_calls = []
 
-    monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: (_ for _ in ()).throw(FileNotFoundError("missing document")))
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: downstream_calls.append("template"))
-    monkeypatch.setattr(main_module, "build_prompt_contract", lambda *args, **kwargs: downstream_calls.append("prompt"))
-    monkeypatch.setattr(main_module, "load_system_prompr", lambda: downstream_calls.append("system"))
-    monkeypatch.setattr(main_module, "create_client_groq", lambda: downstream_calls.append("client"))
+    monkeypatch.setattr(
+        main_module,
+        "load_and_validate_document",
+        lambda path: (_ for _ in ()).throw(FileNotFoundError("missing document")),
+    )
+    monkeypatch.setattr(
+        main_module,
+        "load_prompt_user_template",
+        lambda style, version: downstream_calls.append("template"),
+    )
+    monkeypatch.setattr(
+        main_module,
+        "build_prompt_contract",
+        lambda *args, **kwargs: downstream_calls.append("prompt"),
+    )
+    monkeypatch.setattr(
+        main_module, "load_system_prompr", lambda: downstream_calls.append("system")
+    )
+    monkeypatch.setattr(
+        main_module, "create_client_groq", lambda: downstream_calls.append("client")
+    )
 
     with pytest.raises(FileNotFoundError, match="missing document"):
         main_module.main()
@@ -442,21 +556,39 @@ def test_main_stops_after_document_loading_failure(main_module, monkeypatch):
 
 
 def test_main_propagates_prompt_rendering_value_error(main_module, monkeypatch):
-    monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
-    monkeypatch.setattr(main_module, "build_prompt_contract", lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("render failed")))
+    monkeypatch.setattr(
+        main_module, "load_and_validate_document", lambda path: "Loaded document"
+    )
+    monkeypatch.setattr(
+        main_module,
+        "load_prompt_user_template",
+        lambda style, version: "Prompt template",
+    )
+    monkeypatch.setattr(
+        main_module,
+        "build_prompt_contract",
+        lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("render failed")),
+    )
 
     with pytest.raises(ValueError, match="render failed"):
         main_module.main()
 
 
 def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
-    monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
+    monkeypatch.setattr(
+        main_module, "load_and_validate_document", lambda path: "Loaded document"
+    )
+    monkeypatch.setattr(
+        main_module,
+        "load_prompt_user_template",
+        lambda style, version: "Prompt template",
+    )
     monkeypatch.setattr(
         main_module,
         "build_prompt_contract",
-        lambda *args, **kwargs: types.SimpleNamespace(rendered_prompt="Rendered prompt", example_output_keys=()),
+        lambda *args, **kwargs: types.SimpleNamespace(
+            rendered_prompt="Rendered prompt", example_output_keys=()
+        ),
     )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
@@ -470,23 +602,39 @@ def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
     monkeypatch.setattr(
         main_module.SummaryParsingError,
         "parse_summary_response",
-        staticmethod(lambda response, **kwargs: (_ for _ in ()).throw(main_module.SummaryParsingError("invalid response"))),
+        staticmethod(
+            lambda response, **kwargs: (_ for _ in ()).throw(
+                main_module.SummaryParsingError("invalid response")
+            )
+        ),
     )
 
     with pytest.raises(main_module.SummaryParsingError, match="invalid response"):
         main_module.main()
 
 
-def test_main_does_not_write_json_when_style_validation_fails(main_module, monkeypatch, valid_summary_payload):
-    summary = importlib.import_module("schema").SummaryOutput.model_validate(valid_summary_payload)
+def test_main_does_not_write_json_when_style_validation_fails(
+    main_module, monkeypatch, valid_summary_payload
+):
+    summary = importlib.import_module("schema").SummaryOutput.model_validate(
+        valid_summary_payload
+    )
     write_calls = []
 
-    monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
+    monkeypatch.setattr(
+        main_module, "load_and_validate_document", lambda path: "Loaded document"
+    )
+    monkeypatch.setattr(
+        main_module,
+        "load_prompt_user_template",
+        lambda style, version: "Prompt template",
+    )
     monkeypatch.setattr(
         main_module,
         "build_prompt_contract",
-        lambda *args, **kwargs: types.SimpleNamespace(rendered_prompt="Rendered prompt", example_output_keys=()),
+        lambda *args, **kwargs: types.SimpleNamespace(
+            rendered_prompt="Rendered prompt", example_output_keys=()
+        ),
     )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
@@ -505,9 +653,15 @@ def test_main_does_not_write_json_when_style_validation_fails(main_module, monke
     monkeypatch.setattr(
         main_module,
         "validate_request_style",
-        lambda parsed_summary, requested_style: (_ for _ in ()).throw(ValueError("wrong style")),
+        lambda parsed_summary, requested_style: (_ for _ in ()).throw(
+            ValueError("wrong style")
+        ),
     )
-    monkeypatch.setattr(main_module, "write_summary_json", lambda parsed_summary, output_path: write_calls.append(output_path))
+    monkeypatch.setattr(
+        main_module,
+        "write_summary_json",
+        lambda parsed_summary, output_path: write_calls.append(output_path),
+    )
 
     with pytest.raises(ValueError, match="wrong style"):
         main_module.main()

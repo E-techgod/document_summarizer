@@ -73,7 +73,7 @@ def evaluate_json_validity(response_text: str) -> bool:
     try:
         parse_json_response(response_text)
         return True
-    except (SummaryParsingError, json.JSONDecodeError, ValueError, TypeError):
+    except SummaryParsingError, json.JSONDecodeError, ValueError, TypeError:
         return False
 
 
@@ -82,7 +82,7 @@ def evaluate_clean_json(response_text: str) -> bool:
     Tracked separately so format tidiness never masks summary quality."""
     try:
         parsed = json.loads(response_text)
-    except (json.JSONDecodeError, ValueError, TypeError):
+    except json.JSONDecodeError, ValueError, TypeError:
         return False
     return isinstance(parsed, dict)
 
@@ -92,7 +92,9 @@ def validate_summary_schema(payload: dict[str, Any], family: str) -> ParsedSumma
     return schema_cls.model_validate(payload)
 
 
-def evaluate_schema_validity(payload: dict[str, Any], family: str) -> tuple[bool, ParsedSummary | None, str | None]:
+def evaluate_schema_validity(
+    payload: dict[str, Any], family: str
+) -> tuple[bool, ParsedSummary | None, str | None]:
     try:
         summary = validate_summary_schema(payload, family)
         return True, summary, None
@@ -104,7 +106,9 @@ def evaluate_style_correctness(summary: ParsedSummary | None, family: str) -> bo
     return summary is not None and summary.style == family
 
 
-def evaluate_word_limit(summary: ParsedSummary | None, family: str, max_words: int) -> tuple[int, bool]:
+def evaluate_word_limit(
+    summary: ParsedSummary | None, family: str, max_words: int
+) -> tuple[int, bool]:
     if summary is None:
         return 0, False
 
@@ -112,21 +116,31 @@ def evaluate_word_limit(summary: ParsedSummary | None, family: str, max_words: i
     return word_count, word_count <= max_words
 
 
-def evaluate_required_fact_coverage(summary: ParsedSummary | None, family: str, required_facts: list[str]) -> tuple[int, int]:
+def evaluate_required_fact_coverage(
+    summary: ParsedSummary | None, family: str, required_facts: list[str]
+) -> tuple[int, int]:
     if summary is None:
         return 0, len(required_facts)
 
     searchable_text = _normalize_text(summary_to_text(summary, family))
-    matches = sum(1 for fact in required_facts if _required_fact_matches(searchable_text, fact))
+    matches = sum(
+        1 for fact in required_facts if _required_fact_matches(searchable_text, fact)
+    )
     return matches, len(required_facts)
 
 
-def evaluate_forbidden_claim_detection(summary: ParsedSummary | None, family: str, forbidden_claims: list[str]) -> int:
+def evaluate_forbidden_claim_detection(
+    summary: ParsedSummary | None, family: str, forbidden_claims: list[str]
+) -> int:
     if summary is None:
         return 0
 
     searchable_text = _normalize_text(summary_to_text(summary, family))
-    return sum(1 for claim in forbidden_claims if _forbidden_claim_matches(searchable_text, claim))
+    return sum(
+        1
+        for claim in forbidden_claims
+        if _forbidden_claim_matches(searchable_text, claim)
+    )
 
 
 def evaluate_bullet_count(

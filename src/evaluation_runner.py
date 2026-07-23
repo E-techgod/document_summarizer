@@ -18,9 +18,12 @@ from evaluator import (
     parse_json_response,
 )
 from output_parser import ParsedSummary
-from prompt_manager import build_prompt_contract, load_prompt_user_template, load_system_prompr
+from prompt_manager import (
+    build_prompt_contract,
+    load_prompt_user_template,
+    load_system_prompr,
+)
 from summarizer import summarize_document
-
 
 FAMILIES = ("technical", "bullets", "executive")
 VERSIONS = ("v1", "v2", "v3")
@@ -81,12 +84,16 @@ def run_evaluation_matrix(
     return results
 
 
-def aggregate_results_by_family(results: list[EvaluationResult]) -> dict[str, list[dict[str, str | int | float]]]:
+def aggregate_results_by_family(
+    results: list[EvaluationResult],
+) -> dict[str, list[dict[str, str | int | float]]]:
     comparison_tables: dict[str, list[dict[str, str | int | float]]] = {}
 
     for family in FAMILIES:
         family_results = [result for result in results if result.family == family]
-        comparison_tables[family] = build_family_comparison_table(family, family_results)
+        comparison_tables[family] = build_family_comparison_table(
+            family, family_results
+        )
 
     return comparison_tables
 
@@ -98,7 +105,9 @@ def build_family_comparison_table(
     table_rows: list[dict[str, str | int | float]] = []
 
     for version in VERSIONS:
-        version_results = [result for result in family_results if result.prompt_version == version]
+        version_results = [
+            result for result in family_results if result.prompt_version == version
+        ]
         table_rows.append(build_family_version_row(family, version, version_results))
 
     return table_rows
@@ -110,20 +119,38 @@ def build_family_version_row(
     version_results: list[EvaluationResult],
 ) -> dict[str, str | int | float]:
     cases_tested = len(version_results)
-    required_facts_found = sum(result.required_facts_found for result in version_results)
-    required_facts_total = sum(result.required_facts_total for result in version_results)
-    bullet_count_row = build_bullet_count_row(version_results) if family == "bullets" else None
+    required_facts_found = sum(
+        result.required_facts_found for result in version_results
+    )
+    required_facts_total = sum(
+        result.required_facts_total for result in version_results
+    )
+    bullet_count_row = (
+        build_bullet_count_row(version_results) if family == "bullets" else None
+    )
 
     row: dict[str, str | int | float] = {
         "prompt_version": version,
         "cases_tested": cases_tested,
-        "valid_json_rate": ratio_to_percent(sum(result.valid_json for result in version_results), cases_tested),
-        "schema_valid_rate": ratio_to_percent(sum(result.valid_schema for result in version_results), cases_tested),
-        "word_limit_compliance": ratio_to_percent(sum(result.within_word_limit for result in version_results), cases_tested),
+        "valid_json_rate": ratio_to_percent(
+            sum(result.valid_json for result in version_results), cases_tested
+        ),
+        "schema_valid_rate": ratio_to_percent(
+            sum(result.valid_schema for result in version_results), cases_tested
+        ),
+        "word_limit_compliance": ratio_to_percent(
+            sum(result.within_word_limit for result in version_results), cases_tested
+        ),
         "fact_coverage": ratio_to_percent(required_facts_found, required_facts_total),
-        "forbidden_claims_count": sum(result.forbidden_claims_found for result in version_results),
-        "average_score": round(average([calculate_score(result) for result in version_results]), 2),
-        "average_latency_seconds": round(average([result.latency_seconds for result in version_results]), 3),
+        "forbidden_claims_count": sum(
+            result.forbidden_claims_found for result in version_results
+        ),
+        "average_score": round(
+            average([calculate_score(result) for result in version_results]), 2
+        ),
+        "average_latency_seconds": round(
+            average([result.latency_seconds for result in version_results]), 3
+        ),
     }
 
     if bullet_count_row is not None:
@@ -158,7 +185,9 @@ def run_single_evaluation(
             style=family,
             version=version,
             max_words=max_words,
-            output_instructions=build_output_instructions_for_family(family, version, max_words),
+            output_instructions=build_output_instructions_for_family(
+                family, version, max_words
+            ),
         )
 
         started_at = time.perf_counter()
@@ -219,7 +248,7 @@ def run_single_evaluation(
             output_tokens=output_tokens,
             max_words=max_words,
         )
-    except Exception as error:
+    except (ValueError, KeyError, json.JSONDecodeError) as error:
         return build_failed_result(
             case_id=case_id,
             family=family,
@@ -342,7 +371,7 @@ def derive_bullet_metrics_from_raw_response(
 
     try:
         payload = parse_json_response(raw_response)
-    except Exception:
+    except json.JSONDecodeError, ValueError:
         return None, False if expected_bullet_count is not None else None
 
     bullets = payload.get("bullets")
@@ -369,7 +398,7 @@ def get_expected_bullet_count(case: dict[str, Any], family: str) -> int | None:
 def load_evaluation_cases(cases_path: Path) -> list[dict[str, Any]]:
     payload = json.loads(cases_path.read_text(encoding="utf-8"))
     if not isinstance(payload, list):
-        raise ValueError("Evaluation cases file must contain a JSON list.")
+        raise TypeError("Evaluation cases file must contain a JSON list.")
     return payload
 
 
@@ -380,7 +409,9 @@ def resolve_case_document_path(document_path: str) -> Path:
     return PROJECT_ROOT / path
 
 
-def build_output_instructions_for_family(family: str, version: str, max_words: int) -> str:
+def build_output_instructions_for_family(
+    family: str, version: str, max_words: int
+) -> str:
     if family == "technical":
         return f"""
 Return only valid JSON.
@@ -431,7 +462,9 @@ Keep the combined text within {max_words} words.
 
 
 def build_bullet_count_row(version_results: list[EvaluationResult]) -> float:
-    eligible_results = [result for result in version_results if result.bullet_count_correct is not None]
+    eligible_results = [
+        result for result in version_results if result.bullet_count_correct is not None
+    ]
     if not eligible_results:
         return 0.0
 

@@ -1,3 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
 [project]
 name = "document-summarizer"
 version = "0.1.0"
@@ -8,6 +15,18 @@ dependencies = [
     "groq>=1.5.0",
     "jinja2>=3.1.6",
     "pydantic>=2.13.4",
-    "pytest>=9.1.1",
     "python-dotenv>=1.2.2",
 ]
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "pytest>=9.1.1",
+    "ruff>=0.15.21",
+]
+
+[project.scripts]
+document-summarizer = "src.main:main"
+
+[tool.uv]
+package = true

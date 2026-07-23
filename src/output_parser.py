@@ -1,12 +1,14 @@
 """Responsible for validating structured responses"""
+
 import json
-from typing import TypeAlias
 
 from pydantic import ValidationError
 
-from schema import BulletsSummary, ExecutiveSummary, SummaryOutput, TechnicalSummary
+from .schema import BulletsSummary, ExecutiveSummary, SummaryOutput, TechnicalSummary
 
-ParsedSummary: TypeAlias = SummaryOutput | TechnicalSummary | BulletsSummary | ExecutiveSummary
+type ParsedSummary = (
+    SummaryOutput | TechnicalSummary | BulletsSummary | ExecutiveSummary
+)
 
 class SummaryParsingError(ValueError):
     """Raised when LLM summary cannot be parsed or validated"""
@@ -17,7 +19,7 @@ class SummaryParsingError(ValueError):
         requested_version: str | None = None,
         example_output_keys: tuple[str, ...] = (),
     ) -> ParsedSummary:
-        cleaned_response= response.strip()
+        cleaned_response = response.strip()
 
         if not cleaned_response:
             raise SummaryParsingError("The LLM return an empty response")
@@ -33,7 +35,9 @@ class SummaryParsingError(ValueError):
         try:
             return SummaryOutput.model_validate(normalized_data)
         except ValidationError as error:
-            raise SummaryParsingError(f"The response failed schema validation:\n{error}") from error
+            raise SummaryParsingError(
+                f"The response failed schema validation:\n{error}"
+            ) from error
 
 
 def _parse_response_payload(response: str) -> dict:
@@ -55,7 +59,9 @@ def _parse_response_payload(response: str) -> dict:
         if isinstance(parsed, dict):
             return parsed
 
-    raise SummaryParsingError("The model returned invalid json Unable to locate a valid JSON object in the response")
+    raise SummaryParsingError(
+        "The model returned invalid json Unable to locate a valid JSON object in the response"
+    )
 
 
 def _extract_json_candidates(text: str) -> list[str]:
@@ -92,7 +98,7 @@ def _extract_json_candidates(text: str) -> list[str]:
             elif current == "}":
                 depth -= 1
                 if depth == 0:
-                    candidates.append(text[start_index:end_index + 1])
+                    candidates.append(text[start_index : end_index + 1])
                     break
 
     return candidates
@@ -135,7 +141,8 @@ def normalize_summary_payload(
             risks = classified["risks_or_limitations"]
 
     normalized = {
-        "title": _coerce_string(payload.get("title")) or _derive_title(overview, requested_style),
+        "title": _coerce_string(payload.get("title"))
+        or _derive_title(overview, requested_style),
         "style": _coerce_string(payload.get("style")) or requested_style,
         "version": _coerce_string(payload.get("version")) or requested_version,
         "overview": overview,
@@ -147,7 +154,11 @@ def normalize_summary_payload(
         normalized["overview"] = key_points[0]
         normalized["key_points"] = key_points[1:] or key_points
 
-    if not normalized["key_points"] and example_output_keys == ("bullets", "style") and bullets:
+    if (
+        not normalized["key_points"]
+        and example_output_keys == ("bullets", "style")
+        and bullets
+    ):
         classified = _classify_bullets(bullets)
         normalized["overview"] = normalized["overview"] or classified["overview"]
         normalized["key_points"] = classified["key_points"]
@@ -170,7 +181,11 @@ def _classify_bullets(bullets: list[str]) -> dict[str, str | list[str]]:
         "error",
         "gap",
     )
-    risks = [bullet for bullet in bullets if any(keyword in bullet.lower() for keyword in risk_keywords)]
+    risks = [
+        bullet
+        for bullet in bullets
+        if any(keyword in bullet.lower() for keyword in risk_keywords)
+    ]
     key_points = [bullet for bullet in bullets if bullet not in risks]
 
     if len(key_points) > 1:
@@ -216,13 +231,19 @@ def _derive_title(overview: str | None, requested_style: str | None) -> str:
         return f"{requested_style.title()} Summary"
     return "Summary"
 
+
 def validate_request_style(summary: ParsedSummary, requested_style: str) -> None:
     if summary.style != requested_style:
-        raise ValueError(f"The model return the wrong summary style.\n Expected '{requested_style}' but recieved {summary.style}")
+        raise ValueError(
+            f"The model return the wrong summary style.\n Expected '{requested_style}' but recieved {summary.style}"
+        )
+
 
 def validate_version_style(summary: ParsedSummary, requested_version: str) -> None:
     if summary.version != requested_version:
-        raise ValueError(f"The model return the wrong summary version.\n Expected '{requested_version}' but recieved {summary.version}")
+        raise ValueError(
+            f"The model return the wrong summary version.\n Expected '{requested_version}' but recieved {summary.version}"
+        )
 
 
 def _infer_summary_family(summary: ParsedSummary) -> str:
@@ -274,7 +295,9 @@ def count_summary_words(summary: ParsedSummary, family: str | None = None) -> in
     return len(summary_to_text(summary, family).split())
 
 
-def validate_max_words(summary: ParsedSummary, family: str | int, max_words: int | None = None) -> None:
+def validate_max_words(
+    summary: ParsedSummary, family: str | int, max_words: int | None = None
+) -> None:
     if isinstance(family, int):
         max_words = family
         family = None
@@ -285,6 +308,6 @@ def validate_max_words(summary: ParsedSummary, family: str | int, max_words: int
     word_count = count_summary_words(summary, family)
 
     if word_count > max_words:
-        raise ValueError(f"The summary contains '{word_count}' words.\n The maximum allowed were '{max_words}'")
-
-        
+        raise ValueError(
+            f"The summary contains '{word_count}' words.\n The maximum allowed were '{max_words}'"
+        )

@@ -6,6 +6,7 @@ from groq import Groq
 @dataclass(frozen=True)
 class SummarizationResult:
     """The model's reply plus the token usage reported by the provider."""
+
     text: str
     input_tokens: int | None
     output_tokens: int | None

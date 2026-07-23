@@ -1,5 +1,7 @@
 # Document-summarizer
 
+Current package version: `0.1.0`
+
 A small pipeline that turns a `.txt` document into an audience-tailored summary
 using the Groq API. Load a document, pick a prompt family and version, render
 it into a Jinja2 template, send it to the model, validate the structured
@@ -47,9 +49,8 @@ prompt version **v1** and a 250-word limit.
 
 ## JSON output format
 
-The code currently has two JSON shapes in play.
-
-`src/main.py` injects JSON instructions with this shared shape:
+The runtime path in `src/main.py` normalizes model output into this shared
+shape:
 
 ```json
 {
@@ -62,7 +63,7 @@ The code currently has two JSON shapes in play.
 }
 ```
 
-The family schemas in `src/schema.py` are narrower:
+`src/schema.py` still also defines narrower family-specific schemas:
 
 - `technical` expects `overview`, `key_technical_points`,
   `risks_or_limitations`, `style`
@@ -70,7 +71,8 @@ The family schemas in `src/schema.py` are narrower:
 - `executive` expects `overview`, `key_technical_and_business_points`,
   `risks_limitations_or_missing_information`, `style`
 
-The evaluation pipeline uses those family-specific shapes directly.
+The parser layer currently bridges between those family-specific payloads and
+the shared runtime output shape.
 
 ## Evaluation results
 
@@ -108,16 +110,28 @@ Run the automated test suite with:
 uv run pytest -q
 ```
 
-Current test count: `31` collected tests in `tests/test_document_summarizer.py`.
 The suite covers schema validation, JSON parsing failures, prompt rendering,
 versioned prompt loading, normalization of alternate response shapes, and the
 main workflow with mocked dependencies.
 
+I could not re-verify the old collected-count claim on July 23, 2026 because
+`pytest` is not installed in the current environment. The visible test file
+contains `29` test functions.
+
 ## Running it
 
 ```bash
-uv run src/main.py
+document-summarizer
 ```
+
+`uv sync` installs the project itself (via the `document-summarizer` entry
+point defined in `pyproject.toml`), so once dependencies are synced the
+command above works from anywhere inside the project's virtual environment.
+
+Note: `src/main.py` uses relative imports internally, so running it directly
+as a script (`uv run src/main.py` / `python src/main.py`) no longer works —
+it only resolves correctly when run as part of the installed package via the
+`document-summarizer` command above.
 
 Right now the entry point is still hardcoded, not wired up to CLI arguments
 yet: it targets `sample_documents/sample.txt`, uses the **technical** family,
@@ -160,7 +174,10 @@ summary_output_json/v1/technical_v1_summary.json
 - No CLI argument handling yet (planned: pick a file or paste text directly,
   pick a style at the command line).
 - `src/templates/summary_template.py` is currently unused.
-- The main path and the parser layer have drifted: `src/main.py` still calls
-  `validate_max_words` and `count_summary_words` with the older argument list,
-  while `src/output_parser.py` now expects the summary family as well.
+- `src/main.py` still calls `validate_max_words(summary, MAX_WORDS)`, and
+  `src/output_parser.py` handles that older call style by treating an integer
+  second argument as `max_words`.
+- Build configuration is mixed: the active backend is Hatchling, while
+  `[tool.setuptools].py-modules` is present but not used by the current build
+  backend.
 - Automated tests are in `tests/test_document_summarizer.py`.

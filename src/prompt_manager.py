@@ -1,15 +1,17 @@
 """
 Decides wich prompt to use based on user's input and fills in variables
 """
-import sys
+
 from dataclasses import dataclass
 from pathlib import Path
+
 from jinja2 import Template
-from templates.prompt_template_files import PROMPT_TEMPLATE_FILES
 
-PROMPTS_DIR= Path(__file__).parent.parent / "prompts"
+from .templates.prompt_template_files import PROMPT_TEMPLATE_FILES
 
-PROMPT_SYSTEM_FILE= PROMPTS_DIR / "system_prompt" / "system.txt"
+PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
+
+PROMPT_SYSTEM_FILE = PROMPTS_DIR / "system_prompt" / "system.txt"
 
 
 @dataclass(frozen=True)
@@ -20,21 +22,28 @@ class PromptContract:
     example_output_keys: tuple[str, ...]
     rendered_prompt: str
 
+
 # The {{}} needs to match whe using jinja2, if using replace then use {}
+
 
 def load_system_prompr() -> str:
 
     if not PROMPT_SYSTEM_FILE.exists():
-        raise FileNotFoundError(f"Prompt system file was not found in {PROMPT_SYSTEM_FILE}")
-    
+        raise FileNotFoundError(
+            f"Prompt system file was not found in {PROMPT_SYSTEM_FILE}"
+        )
+
     prompt = PROMPT_SYSTEM_FILE.read_text(encoding="utf-8").strip()
 
     if not prompt:
         raise ValueError("System prompt cannot be empty.")
-    
+
     return prompt
 
-def load_prompt_user_template(style: str, version: str) -> str: # Different user's prompt versions
+
+def load_prompt_user_template(
+    style: str, version: str
+) -> str:  # Different user's prompt versions
 
     if style not in PROMPT_TEMPLATE_FILES:
         raise ValueError(f"Unsupported summary style: {style}")
@@ -44,19 +53,22 @@ def load_prompt_user_template(style: str, version: str) -> str: # Different user
     if version not in style_templates:
         raise ValueError(f"Unsupported prompt version '{version}' for style '{style}'")
 
-    PROMPT_PATH= PROMPTS_DIR / "user_prompts" / version / style_templates[version]
+    PROMPT_PATH = PROMPTS_DIR / "user_prompts" / version / style_templates[version]
 
     if not PROMPT_PATH.exists():
         raise FileNotFoundError(f"Prompt template file was not found in {PROMPT_PATH}")
 
-    prompt= PROMPT_PATH.read_text(encoding="utf-8").strip()
+    prompt = PROMPT_PATH.read_text(encoding="utf-8").strip()
 
     if not prompt:
         raise ValueError("Temple prompt cannot be empty")
-    
+
     return prompt
 
-def render_output_instructions(output_instructions: str, style: str, version: str, max_words: int) -> str:
+
+def render_output_instructions(
+    output_instructions: str, style: str, version: str, max_words: int
+) -> str:
     template = Template(output_instructions)
     return template.render(style=style, version=version, max_words=max_words).strip()
 
@@ -93,7 +105,7 @@ def _extract_json_object_block(text: str) -> str | None:
         elif char == "}":
             depth -= 1
             if depth == 0:
-                return text[start:index + 1]
+                return text[start : index + 1]
 
     return None
 
@@ -136,6 +148,7 @@ def build_prompt_contract(
         rendered_prompt=rendered_prompt,
     )
 
+
 def build_user_prompt(
     user_template: str,
     document_text: str,
@@ -144,8 +157,10 @@ def build_user_prompt(
     max_words: int,
     output_instructions: str,
 ) -> str:
-    template= Template(user_template) # Here goes one of the users prompts variations
-    rendered_output_instructions = render_output_instructions(output_instructions, style, version, max_words)
+    template = Template(user_template)  # Here goes one of the users prompts variations
+    rendered_output_instructions = render_output_instructions(
+        output_instructions, style, version, max_words
+    )
     return template.render(
         document_text=document_text.strip(),
         style=style,
@@ -154,7 +169,8 @@ def build_user_prompt(
         output_instructions=rendered_output_instructions,
     )
     # PROMPT + SUMMARY_TEMPLATE (RENDER of the DOC)
-    
+
+
 """
 PROMPT HERE 
 ...... 

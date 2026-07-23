@@ -1,7 +1,6 @@
-from pathlib import Path
 import json
 import sys
-
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = PROJECT_ROOT / "src"
@@ -9,9 +8,13 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from evaluation_runner import FAMILIES, aggregate_results_by_family, load_evaluation_cases, run_evaluation_matrix
+from evaluation_runner import (
+    FAMILIES,
+    aggregate_results_by_family,
+    load_evaluation_cases,
+    run_evaluation_matrix,
+)
 from llm_client import create_client_groq
-
 
 MODEL_NAME = "llama-3.1-8b-instant"
 TEMPERATURE = 0.0
@@ -44,7 +47,9 @@ def save_family_results(results, run_date: str) -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     for family in FAMILIES:
-        family_results = [result.model_dump() for result in results if result.family == family]
+        family_results = [
+            result.model_dump() for result in results if result.family == family
+        ]
         output_path = RESULTS_DIR / f"{family}_evaluation_{run_date}.json"
         output_path.write_text(json.dumps(family_results, indent=2), encoding="utf-8")
 
@@ -71,7 +76,9 @@ def format_markdown_table(rows) -> str:
     data_lines = []
 
     for row in rows:
-        data_lines.append("| " + " | ".join(str(row.get(header, "")) for header in headers) + " |")
+        data_lines.append(
+            "| " + " | ".join(str(row.get(header, "")) for header in headers) + " |"
+        )
 
     return "\n".join([header_line, separator_line, *data_lines])
 
