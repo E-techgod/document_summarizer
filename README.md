@@ -1,5 +1,7 @@
 # Document-summarizer
 
+[![Tests](https://github.com/E-techgod/document-summarizer/actions/workflows/tests.yml/badge.svg)](https://github.com/E-techgod/document-summarizer/actions/workflows/tests.yml)
+
 Current package version: `0.1.0`
 
 A small pipeline that turns a `.txt` document into an audience-tailored summary
