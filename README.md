@@ -1,9 +1,9 @@
-# document-summarizer
+# Document-summarizer
 
 A small pipeline that turns a `.txt` document into an audience-tailored summary
 using the Groq API. Load a document, pick a prompt style, render it into a
 Jinja2 template, send it to the model, validate the structured response, print
-the result.
+the result, and save the final summary as a `.json` file.
 
 This is the first version of the pipeline:
 
@@ -18,7 +18,9 @@ Call the model
       ↓
 Parse and validate JSON summary
       ↓
-Print validated summary + word count
+Write validated summary to `.json`
+      ↓
+Print validated summary + saved path + word count
 ```
 
 Only `.txt` files are supported for now — no PDFs, no Word docs.
@@ -40,6 +42,25 @@ All three are capped at 250 words. After the model responds, `main.py` parses
 the JSON, validates it against a Pydantic schema, checks that the returned
 style matches the requested style, enforces the 250-word cap, and requires at
 least one `key_points` item.
+
+## JSON output format
+
+The model is prompted to return only valid JSON, and that JSON must match the
+same structure enforced by the schema:
+
+```json
+{
+  "title": "string",
+  "style": "bullets | executive | technical",
+  "overview": "string",
+  "key_points": ["string"],
+  "risks_or_limitations": ["string"]
+}
+```
+
+The `style` field is the summary format identifier and must exactly match the
+requested style from the prompt. The combined text inside `overview`,
+`key_points`, and `risks_or_limitations` must stay within the 250-word limit.
 
 ## Setup
 
@@ -80,7 +101,19 @@ the `SUMMARY_STYLE` constant in `main.py`, or point `DOCUMENT_PATH` at a differe
 `.txt` file, until argument parsing lands.
 
 During a run, `main.py` currently prints the rendered user prompt, the validated
-JSON summary, and the final summary word count.
+JSON summary, the saved output path, and the final summary word count.
+
+The generated summary is also written to:
+
+```text
+summary_output_json/<document_name>_summary.json
+```
+
+Example for the current hardcoded sample:
+
+```text
+summary_output_json/sample_summary.json
+```
 
 ## Project layout
 
@@ -94,6 +127,7 @@ JSON summary, and the final summary word count.
 - `src/output_parser.py` — parses the model's JSON output, validates it
   against the schema, checks style, and enforces the word cap.
 - `src/schema.py` — defines the structured summary shape with Pydantic.
+- `summary_output_json/` — stores generated summary `.json` files.
 - `prompts/` — system prompt and the three user-prompt style templates.
 - `sample_documents/sample.txt` — the sample input used by the current
   hardcoded run.
