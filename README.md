@@ -72,6 +72,20 @@ The family schemas in `src/schema.py` are narrower:
 
 The evaluation pipeline uses those family-specific shapes directly.
 
+## Evaluation results
+
+Latest saved evaluation artifacts for July 23, 2026:
+
+- [Prompt comparison table](./evaluations/results/prompt_comparison_table_2026-07-23.md)
+- [Cross-family comparison metrics](./evaluations/results/comparison_tables_2026-07-23.json)
+- [Technical evaluation details](./evaluations/results/technical_evaluation_2026-07-23.json)
+- [Bullets evaluation details](./evaluations/results/bullets_evaluation_2026-07-23.json)
+- [Executive evaluation details](./evaluations/results/executive_evaluation_2026-07-23.json)
+
+The current results show that the simplest `v1` prompts were the most reliable,
+while weaker scores were mostly caused by output-format and schema mismatches
+between prompt versions and the evaluator, not by forbidden claims.
+
 ## Setup
 
 Requires Python 3.14+ and [uv](https://docs.astral.sh/uv/).
