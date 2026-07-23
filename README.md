@@ -1,6 +1,6 @@
 # Document-summarizer
 
-[![Tests](https://github.com/E-techgod/document-summarizer/actions/workflows/tests.yml/badge.svg)](https://github.com/E-techgod/document-summarizer/actions/workflows/tests.yml)
+[![Tests](https://github.com/E-techgod/document_summarizer/actions/workflows/tests.yml/badge.svg)](https://github.com/E-techgod/document_summarizer/actions/workflows/tests.yml)
 
 Current package version: `0.1.0`
 
