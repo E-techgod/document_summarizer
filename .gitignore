@@ -1,18 +1,22 @@
-# Python-generated files
+# Python Build Artifacts & Bytecode
 __pycache__/
 *.py[oc]
 build/
 dist/
 wheels/
-*.egg-info
-.DS_Store
+*.egg-info/
+
+# Virtual Environments
+.venv/
+
+# Environment Variables & Secrets
+.env
+
+# Project Artifacts & Outputs
 graphify-out/
 llm_context_payload.txt
 README_FACTS.md
 *.json
 
-# Virtual environments
-.venv
-
-# Secrets
-.env
+# Operating System Files
+.DS_Store
