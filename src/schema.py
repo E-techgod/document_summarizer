@@ -1,6 +1,7 @@
 from typing import Literal 
 from pydantic import BaseModel, ConfigDict, Field
 SUMMARY_STYLE= Literal["bullets", "executive", "technical"] # Prevent the model from returning unsupported styles
+SUMMARY_VERSION= Literal["v1", "v2", "v3"]
 
 class SummaryOutput(BaseModel):
     model_config= ConfigDict(extra="forbid") # Rejects unexpected fields.

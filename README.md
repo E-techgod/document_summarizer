@@ -106,13 +106,13 @@ JSON summary, the saved output path, and the final summary word count.
 The generated summary is also written to:
 
 ```text
-summary_output_json/<document_name>_summary.json
+summary_output_json/<style>_<version>_summary.json
 ```
 
 Example for the current hardcoded sample:
 
 ```text
-summary_output_json/sample_summary.json
+summary_output_json/technical_v1_summary.json
 ```
 
 ## Project layout

@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 
@@ -218,7 +217,7 @@ def test_build_user_prompt_strips_document_edges(prompt_manager_module):
 
 @pytest.mark.parametrize("style", ["bullets", "executive", "technical"])
 def test_real_prompt_templates_include_rendered_json_output_instructions(prompt_manager_module, style):
-    user_template = prompt_manager_module.load_prompt_user_template(style)
+    user_template = prompt_manager_module.load_prompt_user_template(style, "v1")
 
     prompt = prompt_manager_module.build_user_prompt(
         user_template=user_template,
@@ -262,9 +261,25 @@ def test_write_summary_json_persists_validated_payload(main_module, valid_summar
 
 
 def test_build_summary_output_path_uses_style_name(main_module):
-    output_path = main_module.build_summary_output_path("executive")
+    output_path = main_module.build_summary_output_path("executive", "v2")
 
-    assert output_path == main_module.PROJECT_DIRECTORY / "summary_output_json" / "executive_summary.json"
+    assert output_path == main_module.PROJECT_DIRECTORY / "summary_output_json" / "executive_v2_summary.json"
+
+
+def test_get_prompt_version_reads_version_from_template_filename(main_module):
+    assert main_module.get_prompt_version("technical", "v3") == "v3"
+
+
+def test_load_prompt_user_template_uses_requested_version(prompt_manager_module):
+    prompt = prompt_manager_module.load_prompt_user_template("technical", "v2")
+
+    assert 'The requested summary format identifier is "{{ style }}".' in prompt
+    assert "USE THIS WHEN: Your audience is a technical engineer who need the technical version" in prompt
+
+
+def test_load_prompt_user_template_rejects_unsupported_version(prompt_manager_module):
+    with pytest.raises(ValueError, match="Unsupported prompt version"):
+        prompt_manager_module.load_prompt_user_template("technical", "v9")
 
 
 def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monkeypatch, valid_summary_payload, capsys):
@@ -272,7 +287,7 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
     calls = []
 
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: calls.append(("document", path)) or "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style: calls.append(("template", style)) or "Prompt {{ document_text }}")
+    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: calls.append(("template", style, version)) or "Prompt {{ document_text }}")
     monkeypatch.setattr(
         main_module,
         "build_user_prompt",
@@ -331,7 +346,7 @@ def test_main_stops_after_document_loading_failure(main_module, monkeypatch):
     downstream_calls = []
 
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: (_ for _ in ()).throw(FileNotFoundError("missing document")))
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style: downstream_calls.append("template"))
+    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: downstream_calls.append("template"))
     monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: downstream_calls.append("prompt"))
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: downstream_calls.append("system"))
     monkeypatch.setattr(main_module, "create_client_groq", lambda: downstream_calls.append("client"))
@@ -344,7 +359,7 @@ def test_main_stops_after_document_loading_failure(main_module, monkeypatch):
 
 def test_main_propagates_prompt_rendering_value_error(main_module, monkeypatch):
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style: "Prompt template")
+    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
     monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("render failed")))
 
     with pytest.raises(ValueError, match="render failed"):
@@ -353,7 +368,7 @@ def test_main_propagates_prompt_rendering_value_error(main_module, monkeypatch):
 
 def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style: "Prompt template")
+    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
     monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: "Rendered prompt")
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
@@ -373,7 +388,7 @@ def test_main_does_not_write_json_when_style_validation_fails(main_module, monke
     write_calls = []
 
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
-    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style: "Prompt template")
+    monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
     monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: "Rendered prompt")
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())

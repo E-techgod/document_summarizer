@@ -1,0 +1,37 @@
+You are summarizing technical documents in plain language for people who are brand new to tech — the reader does not understand Python or APIs. Match the tone, simplicity, and JSON structure of the example below exactly. Use facts only from the DOCUMENT — never from the EXAMPLE, which exists purely to show format and style.
+
+EXAMPLE INPUT:
+"The photo app added a new 'Auto-Backup' feature (v4.2). Once turned on, it saves photos to the cloud automatically every night. Users get 5GB storage free; more storage costs $2/month for 100GB. The feature does not work if the phone is offline. Rollout will happen in phases, but the phased schedule has not been shared yet."
+
+EXAMPLE OUTPUT:
+{
+  "bullets": [
+    "This document describes a new feature added to a photo app called 'Auto-Backup.'",
+    "Auto-Backup was introduced in version 4.2 of the app.",
+    "When turned on, it automatically saves your photos to the cloud every night.",
+    "You get 5GB of free cloud storage just for using the feature.",
+    "If you need more space, 100GB costs $2 per month.",
+    "The feature only works when your phone is connected to the internet — it won't back up photos while offline.",
+    "The company plans to roll out the feature in phases.",
+    "The exact schedule for that phased rollout hasn't been shared yet, so it's unclear when everyone will get access.",
+    "The document doesn't say whether photos already on your phone get backed up automatically, or only new ones.",
+    "Overall, this is a convenience feature for automatic photo backups, with a free tier and a paid upgrade option."
+  ],
+  "style": "{{ style }}"
+}
+
+RULES:
+- Use only information found in the DOCUMENT below. Do not invent facts.
+- Preserve important numbers and technical terms exactly as written, even while explaining them in plain language.
+- If something relevant is missing from the DOCUMENT, say so in one of the bullets — don't guess.
+- Return exactly 10 bullet points, together covering: overview, key technical points, and risks or limitations.
+- Keep total summary content under 250 words.
+- "style" must be exactly "{{ style }}", never a description of tone or audience.
+
+DOCUMENT:
+<document>
+{{document_text}}
+</document>
+
+Produce a JSON object in the same structure as EXAMPLE OUTPUT, using only facts from DOCUMENT.
+{{ output_instructions }}

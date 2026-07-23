@@ -24,12 +24,20 @@ def load_system_prompr() -> str:
     
     return prompt
 
-def load_prompt_user_template(style: str) -> str: # Different user's prompt versions
+def load_prompt_user_template(style: str, version: str) -> str: # Different user's prompt versions
 
     if style not in PROMPT_TEMPLATE_FILES:
         raise ValueError(f"Unsupported summary style: {style}")
-    
-    PROMPT_PATH= PROMPTS_DIR / "user_prompts" / PROMPT_TEMPLATE_FILES[style]
+
+    style_templates = PROMPT_TEMPLATE_FILES[style]
+
+    if version not in style_templates:
+        raise ValueError(f"Unsupported prompt version '{version}' for style '{style}'")
+
+    PROMPT_PATH= PROMPTS_DIR / "user_prompts" / version / style_templates[version]
+
+    if not PROMPT_PATH.exists():
+        raise FileNotFoundError(f"Prompt template file was not found in {PROMPT_PATH}")
 
     prompt= PROMPT_PATH.read_text(encoding="utf-8").strip()
 

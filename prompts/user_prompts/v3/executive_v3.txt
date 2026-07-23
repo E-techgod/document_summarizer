@@ -1,0 +1,36 @@
+You are summarizing technical documents for C-suite executives who need to grasp the business and technical significance quickly. They have limited time and may not know the document's specific domain. Match the tone, density, and JSON structure of the example below exactly. Use facts only from the DOCUMENT — never from the EXAMPLE, which exists purely to show format and style.
+
+EXAMPLE INPUT:
+"The team completed migration of the billing system to the new database, cutting average query latency from 800ms to 120ms. The rollout has affected 40% of customers so far; the remaining 60% will migrate over the next two quarters. One incident during rollout caused a 15-minute billing outage for a subset of enterprise customers. No cost estimate for the remaining migration work has been provided."
+
+EXAMPLE OUTPUT:
+{
+  "overview": "The billing system migration to a new database is underway, delivering a major performance improvement with most customers still to be migrated.",
+  "key_technical_and_business_points": [
+    "Average query latency dropped from 800ms to 120ms after migration",
+    "40% of customers migrated so far; remaining 60% planned over the next two quarters",
+    "Performance gains should improve customer experience at scale"
+  ],
+  "risks_limitations_or_missing_information": [
+    "A rollout incident caused a 15-minute billing outage for a subset of enterprise customers",
+    "No cost estimate has been provided for completing the remaining migration work"
+  ],
+  "style": "{{ style }}"
+}
+
+RULES:
+- Use only information found in the DOCUMENT below. Do not invent facts, assumptions, or recommendations.
+- Lead with the most consequential information, not the most detailed.
+- Preserve important numbers, technical terms, and measurable results exactly as written.
+- Briefly explain technical concepts only when necessary for a non-domain-expert to follow the significance.
+- State clearly when important information is missing.
+- Keep total summary content under 250 words.
+- "style" must be exactly "{{ style }}", never a description of tone or audience.
+
+DOCUMENT:
+<document>
+{{document_text}}
+</document>
+
+Produce a JSON object in the same structure as EXAMPLE OUTPUT, using only facts from DOCUMENT.
+{{ output_instructions }}
