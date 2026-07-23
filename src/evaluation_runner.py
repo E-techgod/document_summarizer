@@ -6,6 +6,7 @@ from typing import Any
 from document_loader import load_and_validate_document
 from evaluator import (
     EvaluationResult,
+    calculate_score,
     evaluate_bullet_count,
     evaluate_forbidden_claim_detection,
     evaluate_json_validity,
@@ -50,6 +51,57 @@ def run_evaluation_matrix(
                 )
 
     return results
+
+
+def aggregate_results_by_family(results: list[EvaluationResult]) -> dict[str, list[dict[str, str | int | float]]]:
+    comparison_tables: dict[str, list[dict[str, str | int | float]]] = {}
+
+    for family in FAMILIES:
+        family_results = [result for result in results if result.family == family]
+        comparison_tables[family] = build_family_comparison_table(family, family_results)
+
+    return comparison_tables
+
+
+def build_family_comparison_table(
+    family: str,
+    family_results: list[EvaluationResult],
+) -> list[dict[str, str | int | float]]:
+    table_rows: list[dict[str, str | int | float]] = []
+
+    for version in VERSIONS:
+        version_results = [result for result in family_results if result.prompt_version == version]
+        table_rows.append(build_family_version_row(family, version, version_results))
+
+    return table_rows
+
+
+def build_family_version_row(
+    family: str,
+    version: str,
+    version_results: list[EvaluationResult],
+) -> dict[str, str | int | float]:
+    cases_tested = len(version_results)
+    required_facts_found = sum(result.required_facts_found for result in version_results)
+    required_facts_total = sum(result.required_facts_total for result in version_results)
+    bullet_count_row = build_bullet_count_row(version_results) if family == "bullets" else None
+
+    row: dict[str, str | int | float] = {
+        "prompt_version": version,
+        "cases_tested": cases_tested,
+        "valid_json_rate": ratio_to_percent(sum(result.valid_json for result in version_results), cases_tested),
+        "schema_valid_rate": ratio_to_percent(sum(result.valid_schema for result in version_results), cases_tested),
+        "word_limit_compliance": ratio_to_percent(sum(result.within_word_limit for result in version_results), cases_tested),
+        "fact_coverage": ratio_to_percent(required_facts_found, required_facts_total),
+        "forbidden_claims_count": sum(result.forbidden_claims_found for result in version_results),
+        "average_score": round(average([calculate_score(result) for result in version_results]), 2),
+        "average_latency_seconds": round(average([result.latency_seconds for result in version_results]), 3),
+    }
+
+    if bullet_count_row is not None:
+        row["bullet_count_10_rate"] = bullet_count_row
+
+    return row
 
 
 def run_single_evaluation(
@@ -343,3 +395,26 @@ Keep the combined text within {max_words} words.
 """.strip()
 
     raise ValueError(f"Unsupported family: {family}")
+
+
+def build_bullet_count_row(version_results: list[EvaluationResult]) -> float:
+    eligible_results = [result for result in version_results if result.bullet_count_correct is not None]
+    if not eligible_results:
+        return 0.0
+
+    return ratio_to_percent(
+        sum(bool(result.bullet_count_correct) for result in eligible_results),
+        len(eligible_results),
+    )
+
+
+def ratio_to_percent(numerator: int, denominator: int) -> float:
+    if denominator == 0:
+        return 0.0
+    return round((numerator / denominator) * 100, 2)
+
+
+def average(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
