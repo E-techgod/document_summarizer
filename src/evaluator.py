@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 
+
 class EvaluationResult(BaseModel):
     case_id: str
+    family: str
     prompt_version: str
     valid_json: bool
     valid_schema: bool
@@ -16,3 +18,5 @@ class EvaluationResult(BaseModel):
     output_tokens: int | None = None
     raw_response: str
     error: str | None = None
+    bullet_count: int | None = None
+    bullet_count_correct: bool | None = None
