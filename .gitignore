@@ -16,7 +16,7 @@ wheels/
 graphify-out/
 llm_context_payload.txt
 README_FACTS.md
-*.json
+summary_output_json/
 
 # Operating System Files
 .DS_Store

@@ -1,0 +1,42 @@
+[
+  {
+    "case_id": "a",
+    "family": "technical",
+    "prompt_version": "v1",
+    "valid_json": true,
+    "valid_schema": true,
+    "correct_style": true,
+    "word_count": 10,
+    "within_word_limit": true,
+    "required_facts_found": 4,
+    "required_facts_total": 5,
+    "forbidden_claims_found": 0,
+    "latency_seconds": 1.0,
+    "input_tokens": null,
+    "output_tokens": null,
+    "raw_response": "{}",
+    "error": null,
+    "bullet_count": null,
+    "bullet_count_correct": null
+  },
+  {
+    "case_id": "b",
+    "family": "technical",
+    "prompt_version": "v2",
+    "valid_json": true,
+    "valid_schema": false,
+    "correct_style": false,
+    "word_count": 0,
+    "within_word_limit": false,
+    "required_facts_found": 0,
+    "required_facts_total": 5,
+    "forbidden_claims_found": 0,
+    "latency_seconds": 2.0,
+    "input_tokens": null,
+    "output_tokens": null,
+    "raw_response": "{}",
+    "error": "schema fail",
+    "bullet_count": null,
+    "bullet_count_correct": null
+  }
+]

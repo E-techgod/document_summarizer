@@ -1,0 +1,22 @@
+[
+  {
+    "case_id": "d",
+    "family": "executive",
+    "prompt_version": "v3",
+    "valid_json": false,
+    "valid_schema": false,
+    "correct_style": false,
+    "word_count": 0,
+    "within_word_limit": false,
+    "required_facts_found": 0,
+    "required_facts_total": 5,
+    "forbidden_claims_found": 0,
+    "latency_seconds": 3.0,
+    "input_tokens": null,
+    "output_tokens": null,
+    "raw_response": "bad",
+    "error": "json fail",
+    "bullet_count": null,
+    "bullet_count_correct": null
+  }
+]

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "technical_article",
+    "document_path": "evaluations/documents/technical_article.txt",
+    "required_facts": [
+      "The study evaluated federated learning for industrial IoT monitoring across 18 factories.",
+      "The federated model achieved 92 percent recall and 88 percent precision.",
+      "The centralized baseline performed slightly better at 94 percent recall and 90 percent precision.",
+      "The approach reduced cross-site data transfer by about 97 percent.",
+      "The system did not eliminate downtime and still required maintenance staff review."
+    ],
+    "forbidden_claims": [
+      "The federated model outperformed the centralized baseline.",
+      "The system guarantees zero downtime.",
+      "Raw sensor data was centrally pooled from all factories during deployment."
+    ],
+    "max_words": 250,
+    "style_overrides": {
+      "bullets": {
+        "expected_bullet_count": 10
+      }
+    }
+  },
+  {
+    "id": "business_report",
+    "document_path": "evaluations/documents/business_report.txt",
+    "required_facts": [
+      "Northstar Home Services expanded from 12 to 15 markets by entering Raleigh, Nashville, and Columbus.",
+      "Quarterly revenue was $18.4 million, up 22 percent year over year.",
+      "Subscription renewals improved from 76 percent to 81 percent.",
+      "Customer acquisition cost increased from $410 to $455 per subscriber.",
+      "The company is not yet profitable on a net-income basis."
+    ],
+    "forbidden_claims": [
+      "Northstar is already net profitable.",
+      "Gross margin increased during the quarter.",
+      "The company plans immediate expansion into additional cities despite staffing issues."
+    ],
+    "max_words": 250,
+    "style_overrides": {
+      "bullets": {
+        "expected_bullet_count": 10
+      }
+    }
+  },
+  {
+    "id": "short_news_report",
+    "document_path": "evaluations/documents/short_news_report.txt",
+    "required_facts": [
+      "Rivergate approved a six-month overnight bus pilot on two routes.",
+      "Service runs from 12:30 a.m. to 4:30 a.m. on Fridays and Saturdays starting August 15.",
+      "The pilot cost is estimated at $420,000.",
+      "A similar 2023 pilot on another corridor was canceled after weak demand.",
+      "Any permanent program requires a separate future vote."
+    ],
+    "forbidden_claims": [
+      "The city approved permanent citywide night bus service.",
+      "The pilot runs every night of the week.",
+      "The 2023 pilot was considered a success and expanded."
+    ],
+    "max_words": 250,
+    "style_overrides": {
+      "bullets": {
+        "expected_bullet_count": 10
+      }
+    }
+  },
+  {
+    "id": "poorly_structured_notes",
+    "document_path": "evaluations/documents/poorly_structured_notes.txt",
+    "required_facts": [
+      "Project Falcon is an internal search assistant for support agents and is not customer-facing.",
+      "The target before launch is 90 percent answer relevance on the validation set.",
+      "The approved phase-one spend cap is $750k.",
+      "The new target is an internal beta on September 15 followed by a four-week pilot with 40 support agents if the quality gate passes.",
+      "Europe rollout is not planned until data residency review is complete."
+    ],
+    "forbidden_claims": [
+      "Phase-one budget is finalized at $700k.",
+      "The product is already approved for customer self-service chat.",
+      "A Europe rollout in Q4 is confirmed."
+    ],
+    "max_words": 250,
+    "style_overrides": {
+      "bullets": {
+        "expected_bullet_count": 10
+      }
+    }
+  },
+  {
+    "id": "document_with_missing_information",
+    "document_path": "evaluations/documents/document_with_missing_information.txt",
+    "required_facts": [
+      "A packaging supplier paused shipments because of a quality issue in seal material for refrigerated meal trays.",
+      "Two production sites use the affected trays.",
+      "The document says inventory is sufficient for several days but does not give an exact number.",
+      "Procurement contacted three alternate suppliers with mixed availability.",
+      "The report does not identify whether there is a food safety risk or when full shipments will resume."
+    ],
+    "forbidden_claims": [
+      "There is a confirmed food safety incident.",
+      "The exact remaining inventory duration is known.",
+      "A replacement supplier is fully secured and ready for full-volume production."
+    ],
+    "max_words": 250,
+    "style_overrides": {
+      "bullets": {
+        "expected_bullet_count": 10
+      }
+    }
+  }
+]

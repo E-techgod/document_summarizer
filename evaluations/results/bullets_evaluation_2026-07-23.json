@@ -1,0 +1,22 @@
+[
+  {
+    "case_id": "c",
+    "family": "bullets",
+    "prompt_version": "v1",
+    "valid_json": true,
+    "valid_schema": true,
+    "correct_style": true,
+    "word_count": 20,
+    "within_word_limit": true,
+    "required_facts_found": 5,
+    "required_facts_total": 5,
+    "forbidden_claims_found": 0,
+    "latency_seconds": 1.5,
+    "input_tokens": null,
+    "output_tokens": null,
+    "raw_response": "{}",
+    "error": null,
+    "bullet_count": 10,
+    "bullet_count_correct": true
+  }
+]
