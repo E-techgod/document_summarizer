@@ -8,10 +8,9 @@ import pytest
 from pydantic import ValidationError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_DIR = PROJECT_ROOT / "src"
 
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 if "groq" not in sys.modules:
     groq_stub = types.ModuleType("groq")
@@ -21,22 +20,22 @@ if "groq" not in sys.modules:
 
 @pytest.fixture
 def schema_module():
-    return importlib.import_module("schema")
+    return importlib.import_module("src.schema")
 
 
 @pytest.fixture
 def output_parser_module():
-    return importlib.import_module("output_parser")
+    return importlib.import_module("src.output_parser")
 
 
 @pytest.fixture
 def prompt_manager_module():
-    return importlib.import_module("prompt_manager")
+    return importlib.import_module("src.prompt_manager")
 
 
 @pytest.fixture
 def main_module():
-    return importlib.import_module("main")
+    return importlib.import_module("src.main")
 
 
 @pytest.fixture
@@ -367,7 +366,7 @@ def test_parse_summary_response_normalizes_prompt_specific_shape(output_parser_m
 def test_write_summary_json_persists_validated_payload(
     main_module, valid_summary_payload, tmp_path
 ):
-    summary = importlib.import_module("schema").SummaryOutput.model_validate(
+    summary = importlib.import_module("src.schema").SummaryOutput.model_validate(
         valid_summary_payload
     )
     output_path = tmp_path / "summaries" / "sample_summary.json"
@@ -412,7 +411,7 @@ def test_load_prompt_user_template_rejects_unsupported_version(prompt_manager_mo
 def test_main_runs_complete_workflow_with_mocked_dependencies(
     main_module, monkeypatch, valid_summary_payload, capsys
 ):
-    summary = importlib.import_module("schema").SummaryOutput.model_validate(
+    summary = importlib.import_module("src.schema").SummaryOutput.model_validate(
         valid_summary_payload
     )
     calls = []
@@ -616,7 +615,7 @@ def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
 def test_main_does_not_write_json_when_style_validation_fails(
     main_module, monkeypatch, valid_summary_payload
 ):
-    summary = importlib.import_module("schema").SummaryOutput.model_validate(
+    summary = importlib.import_module("src.schema").SummaryOutput.model_validate(
         valid_summary_payload
     )
     write_calls = []
