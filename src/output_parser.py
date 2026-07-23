@@ -1,5 +1,6 @@
 """Responsible for validating structured responses"""
 import json
+from multiprocessing import Value
 from schema import SummaryOutput
 from pydantic import ValidationError
 
@@ -26,6 +27,10 @@ class SummaryParsingError(ValueError):
 def validate_request_style(summary: SummaryOutput, requested_style: str) -> None:
     if summary.style != requested_style:
         raise ValueError(f"The model return the wrong summary style.\n Expected '{requested_style}' but recieved {summary.style}")
+
+def validate_version_style(summary: SummaryOutput, requested_version: str) -> None:
+    if summary.version != requested_version:
+        raise ValueError(f"The model return the wrong summary version.\n Expected '{requested_version}' but recieved {summary.version}")
     
 def count_summary_words(summary: SummaryOutput) -> int:
     """ Counts only the meaningful sections"""

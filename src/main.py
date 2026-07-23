@@ -33,7 +33,7 @@ DOCUMENT_FILE= "sample.txt"
 DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
 MAX_WORDS= 250
-SUMMARY_STYLE="technical" # Options: "bullets", "executive", "technical"
+SUMMARY_STYLE="bullets" # Options: "bullets", "executive", "technical"
 SUMMARY_VERSION= "v2" # Options: "v1", "v2", "v3"
 
 
