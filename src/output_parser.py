@@ -1,7 +1,12 @@
 """Responsible for validating structured responses"""
 import json
-from schema import SummaryOutput
+from typing import TypeAlias
+
 from pydantic import ValidationError
+
+from schema import BulletsSummary, ExecutiveSummary, TechnicalSummary
+
+ParsedSummary: TypeAlias = TechnicalSummary | BulletsSummary | ExecutiveSummary
 
 class SummaryParsingError(ValueError):
     """Raised when LLM summary cannot be parsed or validated"""
@@ -11,7 +16,7 @@ class SummaryParsingError(ValueError):
         requested_style: str | None = None,
         requested_version: str | None = None,
         example_output_keys: tuple[str, ...] = (),
-    ) -> SummaryOutput:
+    ) -> ParsedSummary:
         cleaned_response= response.strip()
 
         if not cleaned_response:
@@ -26,7 +31,13 @@ class SummaryParsingError(ValueError):
         )
         
         try:
-            return SummaryOutput.model_validate(normalized_data)
+            if requested_style == "technical":
+                return TechnicalSummary.model_validate(normalized_data)
+            if requested_style == "bullets":
+                return BulletsSummary.model_validate(normalized_data)
+            if requested_style == "executive":
+                return ExecutiveSummary.model_validate(normalized_data)
+            raise SummaryParsingError("Requested style is required for family-specific schema validation")
         except ValidationError as error:
             raise SummaryParsingError(f"The response failed schema validation:\n{error}") from error
 
@@ -211,27 +222,44 @@ def _derive_title(overview: str | None, requested_style: str | None) -> str:
         return f"{requested_style.title()} Summary"
     return "Summary"
 
-def validate_request_style(summary: SummaryOutput, requested_style: str) -> None:
+def validate_request_style(summary: ParsedSummary, requested_style: str) -> None:
     if summary.style != requested_style:
         raise ValueError(f"The model return the wrong summary style.\n Expected '{requested_style}' but recieved {summary.style}")
 
-def validate_version_style(summary: SummaryOutput, requested_version: str) -> None:
+def validate_version_style(summary: ParsedSummary, requested_version: str) -> None:
     if summary.version != requested_version:
         raise ValueError(f"The model return the wrong summary version.\n Expected '{requested_version}' but recieved {summary.version}")
-    
-def count_summary_words(summary: SummaryOutput) -> int:
-    """ Counts only the meaningful sections"""
-    sections=[
-        summary.overview,
-        *summary.key_points,
-        *summary.risks_or_limitations,
-    ]
 
-    combined_sections= " ".join(sections)
-    return len(combined_sections.split())
 
-def validate_max_words(summary: SummaryOutput, max_words: int) -> None:
-    word_count= count_summary_words(summary)
+def summary_to_text(summary: ParsedSummary, family: str) -> str:
+    if family == "technical":
+        sections = [
+            summary.overview,
+            *summary.key_technical_points,
+            *summary.risks_or_limitations,
+        ]
+        return " ".join(sections)
+
+    if family == "bullets":
+        return " ".join(summary.bullets)
+
+    if family == "executive":
+        sections = [
+            summary.overview,
+            *summary.key_technical_and_business_points,
+            *summary.risks_limitations_or_missing_information,
+        ]
+        return " ".join(sections)
+
+    raise ValueError(f"Unsupported summary family: {family}")
+
+
+def count_summary_words(summary: ParsedSummary, family: str) -> int:
+    return len(summary_to_text(summary, family).split())
+
+
+def validate_max_words(summary: ParsedSummary, family: str, max_words: int) -> None:
+    word_count = count_summary_words(summary, family)
 
     if word_count > max_words:
         raise ValueError(f"The summary contains '{word_count}' words.\n The maximum allowed were '{max_words}'")
