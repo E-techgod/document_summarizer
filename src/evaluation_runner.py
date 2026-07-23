@@ -8,6 +8,7 @@ from evaluator import (
     EvaluationResult,
     calculate_score,
     evaluate_bullet_count,
+    evaluate_clean_json,
     evaluate_forbidden_claim_detection,
     evaluate_json_validity,
     evaluate_required_fact_coverage,
@@ -32,23 +33,50 @@ def run_evaluation_matrix(
     model_name: str,
     temperature: float,
     max_words: int,
+    pause_seconds: float = 2.0,
 ) -> list[EvaluationResult]:
+    """Run every (family x case x version) combination.
+
+    Prints one progress line per call so a long run is distinguishable from a
+    hang, and pauses between calls to stay under provider rate limits.
+    """
     results: list[EvaluationResult] = []
+    total = len(FAMILIES) * len(cases) * len(VERSIONS)
+    index = 0
 
     for family in FAMILIES:
         for case in cases:
             for version in VERSIONS:
-                results.append(
-                    run_single_evaluation(
-                        client=client,
-                        case=case,
-                        family=family,
-                        version=version,
-                        model_name=model_name,
-                        temperature=temperature,
-                        max_words=max_words,
-                    )
+                index += 1
+                label = f"[{index}/{total}] {family}/{version} {case['id']}"
+                print(label, end=" ", flush=True)
+
+                result = run_single_evaluation(
+                    client=client,
+                    case=case,
+                    family=family,
+                    version=version,
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_words=max_words,
                 )
+                results.append(result)
+
+                if result.error:
+                    print(f"FAIL ({result.error[:70]})", flush=True)
+                else:
+                    print(
+                        f"ok  score={calculate_score(result):.0f} "
+                        f"{result.latency_seconds:.1f}s "
+                        f"tok={result.input_tokens}/{result.output_tokens}",
+                        flush=True,
+                    )
+
+                if index < total and pause_seconds:
+                    time.sleep(pause_seconds)
+
+    failures = sum(1 for result in results if result.error)
+    print(f"\nFinished {total} evaluations - {total - failures} ok, {failures} failed.")
 
     return results
 
@@ -134,13 +162,16 @@ def run_single_evaluation(
         )
 
         started_at = time.perf_counter()
-        raw_response = summarize_document(
+        completion = summarize_document(
             client=client,
             system_prompt=system_prompt,
             user_prompt=prompt_contract.rendered_prompt,
             model_name=model_name,
             temp=temperature,
         )
+        raw_response = completion.text
+        input_tokens = completion.input_tokens
+        output_tokens = completion.output_tokens
         latency_seconds = time.perf_counter() - started_at
 
         valid_json = evaluate_json_validity(raw_response)
@@ -252,6 +283,7 @@ def build_success_result(
         error=None,
         bullet_count=bullet_count,
         bullet_count_correct=bullet_count_correct,
+        clean_json=evaluate_clean_json(raw_response),
     )
 
 
@@ -297,6 +329,7 @@ def build_failed_result(
         error=error,
         bullet_count=bullet_count,
         bullet_count_correct=bullet_count_correct,
+        clean_json=evaluate_clean_json(raw_response) if raw_response else False,
     )
 
 

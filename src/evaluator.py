@@ -4,7 +4,13 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from output_parser import ParsedSummary, count_summary_words, summary_to_text
+from output_parser import (
+    ParsedSummary,
+    SummaryParsingError,
+    _parse_response_payload,
+    count_summary_words,
+    summary_to_text,
+)
 from schema import SCHEMA_BY_FAMILY
 
 
@@ -27,6 +33,7 @@ class EvaluationResult(BaseModel):
     error: str | None = None
     bullet_count: int | None = None
     bullet_count_correct: bool | None = None
+    clean_json: bool = False
 
 
 def calculate_score(result: EvaluationResult) -> float:
@@ -55,18 +62,29 @@ def calculate_score(result: EvaluationResult) -> float:
 
 
 def parse_json_response(response_text: str) -> dict[str, Any]:
-    parsed = json.loads(response_text)
-    if not isinstance(parsed, dict):
-        raise ValueError("Response JSON must be an object.")
-    return parsed
+    """Extract the JSON object from a model reply, tolerating fences and
+    surrounding prose. Uses the same extractor as the runtime pipeline so the
+    evaluation measures what production would actually accept."""
+    return _parse_response_payload(response_text)
 
 
 def evaluate_json_validity(response_text: str) -> bool:
+    """True if a JSON object can be recovered from the reply at all."""
     try:
         parse_json_response(response_text)
         return True
+    except (SummaryParsingError, json.JSONDecodeError, ValueError, TypeError):
+        return False
+
+
+def evaluate_clean_json(response_text: str) -> bool:
+    """True only if the reply was bare JSON, with no fences or extra prose.
+    Tracked separately so format tidiness never masks summary quality."""
+    try:
+        parsed = json.loads(response_text)
     except (json.JSONDecodeError, ValueError, TypeError):
         return False
+    return isinstance(parsed, dict)
 
 
 def validate_summary_schema(payload: dict[str, Any], family: str) -> ParsedSummary:

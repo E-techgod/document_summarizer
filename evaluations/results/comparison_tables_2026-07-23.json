@@ -2,109 +2,109 @@
   "technical": [
     {
       "prompt_version": "v1",
-      "cases_tested": 1,
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 72.0,
+      "forbidden_claims_count": 1,
+      "average_score": 88.6,
+      "average_latency_seconds": 2.79
+    },
+    {
+      "prompt_version": "v2",
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 84.0,
+      "forbidden_claims_count": 0,
+      "average_score": 95.2,
+      "average_latency_seconds": 5.878
+    },
+    {
+      "prompt_version": "v3",
+      "cases_tested": 5,
       "valid_json_rate": 100.0,
       "schema_valid_rate": 100.0,
       "word_limit_compliance": 100.0,
       "fact_coverage": 80.0,
       "forbidden_claims_count": 0,
       "average_score": 94.0,
-      "average_latency_seconds": 1.0
-    },
-    {
-      "prompt_version": "v2",
-      "cases_tested": 1,
-      "valid_json_rate": 100.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
-      "forbidden_claims_count": 0,
-      "average_score": 30.0,
-      "average_latency_seconds": 2.0
-    },
-    {
-      "prompt_version": "v3",
-      "cases_tested": 0,
-      "valid_json_rate": 0.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
-      "forbidden_claims_count": 0,
-      "average_score": 0.0,
-      "average_latency_seconds": 0.0
+      "average_latency_seconds": 5.99
     }
   ],
   "bullets": [
     {
       "prompt_version": "v1",
-      "cases_tested": 1,
+      "cases_tested": 5,
       "valid_json_rate": 100.0,
       "schema_valid_rate": 100.0,
       "word_limit_compliance": 100.0,
-      "fact_coverage": 100.0,
-      "forbidden_claims_count": 0,
-      "average_score": 100.0,
-      "average_latency_seconds": 1.5,
+      "fact_coverage": 88.0,
+      "forbidden_claims_count": 1,
+      "average_score": 93.4,
+      "average_latency_seconds": 5.182,
       "bullet_count_10_rate": 100.0
     },
     {
       "prompt_version": "v2",
-      "cases_tested": 0,
-      "valid_json_rate": 0.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 84.0,
       "forbidden_claims_count": 0,
-      "average_score": 0.0,
-      "average_latency_seconds": 0.0,
-      "bullet_count_10_rate": 0.0
+      "average_score": 95.2,
+      "average_latency_seconds": 7.804,
+      "bullet_count_10_rate": 100.0
     },
     {
       "prompt_version": "v3",
-      "cases_tested": 0,
-      "valid_json_rate": 0.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
-      "forbidden_claims_count": 0,
-      "average_score": 0.0,
-      "average_latency_seconds": 0.0,
-      "bullet_count_10_rate": 0.0
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 92.0,
+      "forbidden_claims_count": 1,
+      "average_score": 94.6,
+      "average_latency_seconds": 9.397,
+      "bullet_count_10_rate": 100.0
     }
   ],
   "executive": [
     {
       "prompt_version": "v1",
-      "cases_tested": 0,
-      "valid_json_rate": 0.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
-      "forbidden_claims_count": 0,
-      "average_score": 0.0,
-      "average_latency_seconds": 0.0
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 92.0,
+      "forbidden_claims_count": 1,
+      "average_score": 94.6,
+      "average_latency_seconds": 3.651
     },
     {
       "prompt_version": "v2",
-      "cases_tested": 0,
-      "valid_json_rate": 0.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
-      "forbidden_claims_count": 0,
-      "average_score": 0.0,
-      "average_latency_seconds": 0.0
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 80.0,
+      "forbidden_claims_count": 1,
+      "average_score": 91.0,
+      "average_latency_seconds": 7.949
     },
     {
       "prompt_version": "v3",
-      "cases_tested": 1,
-      "valid_json_rate": 0.0,
-      "schema_valid_rate": 0.0,
-      "word_limit_compliance": 0.0,
-      "fact_coverage": 0.0,
+      "cases_tested": 5,
+      "valid_json_rate": 100.0,
+      "schema_valid_rate": 100.0,
+      "word_limit_compliance": 100.0,
+      "fact_coverage": 80.0,
       "forbidden_claims_count": 0,
-      "average_score": 15.0,
-      "average_latency_seconds": 3.0
+      "average_score": 94.0,
+      "average_latency_seconds": 7.627
     }
   ]
 }

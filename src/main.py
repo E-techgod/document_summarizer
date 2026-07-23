@@ -85,8 +85,8 @@ def main():
 
     client= create_client_groq()
 
-    raw_reponse= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
-
+    raw_reponse= summarize_document(client, system_prompt, user_prompt, MODEL_NAME, TEMPERATURE).text
+    
     summary= SummaryParsingError.parse_summary_response(
         raw_reponse,
         requested_style=SUMMARY_STYLE,

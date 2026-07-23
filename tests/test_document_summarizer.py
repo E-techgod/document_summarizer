@@ -378,10 +378,12 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
     monkeypatch.setattr(
         main_module,
         "summarize_document",
-        lambda client, system_prompt, user_prompt, model_name: calls.append(
+        lambda client, system_prompt, user_prompt, model_name, temp=0.0: calls.append(
             ("summarize", system_prompt, user_prompt, model_name)
         )
-        or '{"title":"unused"}',
+        or types.SimpleNamespace(
+            text='{"title":"unused"}', input_tokens=None, output_tokens=None
+        ),
     )
     monkeypatch.setattr(
         main_module.SummaryParsingError,
@@ -458,7 +460,13 @@ def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
     )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
-    monkeypatch.setattr(main_module, "summarize_document", lambda *args, **kwargs: "not json")
+    monkeypatch.setattr(
+        main_module,
+        "summarize_document",
+        lambda *args, **kwargs: types.SimpleNamespace(
+            text="not json", input_tokens=None, output_tokens=None
+        ),
+    )
     monkeypatch.setattr(
         main_module.SummaryParsingError,
         "parse_summary_response",
@@ -482,7 +490,13 @@ def test_main_does_not_write_json_when_style_validation_fails(main_module, monke
     )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
-    monkeypatch.setattr(main_module, "summarize_document", lambda *args, **kwargs: '{"title":"unused"}')
+    monkeypatch.setattr(
+        main_module,
+        "summarize_document",
+        lambda *args, **kwargs: types.SimpleNamespace(
+            text='{"title":"unused"}', input_tokens=None, output_tokens=None
+        ),
+    )
     monkeypatch.setattr(
         main_module.SummaryParsingError,
         "parse_summary_response",

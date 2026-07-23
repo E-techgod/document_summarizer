@@ -15,6 +15,6 @@ def load_and_validate_document(file_path: str) -> str:
     if not text:
         raise ValueError("Document is empty.")
     
-    print("Document successfully load :)")
+    #print("Document successfully load :)")
 
     return text
