@@ -1,6 +1,6 @@
-from groq import Groq 
+from groq import Groq
 
-def summarize_document(client: Groq, system_prompt: str, user_prompt: str, model_name: str) -> str:
+def summarize_document(client: Groq, system_prompt: str, user_prompt: str, model_name: str, temp) -> str:
 
     if not system_prompt.strip():
         raise ValueError("System prompt cannot be empty")
@@ -16,7 +16,7 @@ def summarize_document(client: Groq, system_prompt: str, user_prompt: str, model
             {"role": "user", "content": user_prompt}
         ],
 
-        temperature= 0.0
+        temperature = temp
     )
 
     summary = response.choices[0].message.content # Raw API/Modle call 

@@ -1,0 +1,9 @@
+Supplier Incident Summary
+
+On Monday morning, Meridian Foods received notice that one of its packaging suppliers had paused shipments after detecting a quality issue in seal material used for refrigerated meal trays. Operations leaders opened an incident review the same day and asked plant managers to count on-hand inventory.
+
+The summary confirms that two production sites currently use the affected trays and that both have enough inventory for "several days" of normal output. It does not state the exact number of days remaining. The document also says customer deliveries have not yet been missed, but it gives no forecast for what happens if the supplier outage extends into next week.
+
+Procurement contacted three alternate suppliers. One can provide sample material by Thursday, another can only support partial volume, and the third has not responded. The document does not estimate replacement pricing or qualification time. Quality assurance plans to run leak tests on any alternate material before approving it for production.
+
+The report recommends daily updates until the supplier provides a root-cause analysis. It does not identify whether the defect creates a food safety risk, and it does not say when full shipments are expected to resume.

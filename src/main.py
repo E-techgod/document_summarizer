@@ -33,8 +33,9 @@ DOCUMENT_FILE= "sample.txt"
 DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
 MAX_WORDS= 250
-SUMMARY_STYLE="bullets" # Options: "bullets", "executive", "technical"
-SUMMARY_VERSION= "v3" # Options: "v1", "v2", "v3"
+SUMMARY_STYLE="technical" # Options: "bullets", "executive", "technical"
+SUMMARY_VERSION= "v1" # Options: "v1", "v2", "v3"
+TEMPERATURE= 0.0 # Keep it 0.0 for a summary (deterministic/focused)
 
 
 def get_prompt_version(style: str, version: str) -> str:
@@ -84,7 +85,7 @@ def main():
 
     client= create_client_groq()
 
-    raw_reponse= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
+    raw_reponse= summarize_document(client, system_prompt, user_prompt, MODEL_NAME, TEMPERATURE)
 
     summary= SummaryParsingError.parse_summary_response(
         raw_reponse,

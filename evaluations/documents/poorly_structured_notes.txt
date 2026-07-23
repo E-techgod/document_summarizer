@@ -1,0 +1,16 @@
+Project Falcon notes from mixed meeting threads
+
+Kickoff was probably March, maybe March 3, with product, legal, and data teams in room. Core idea still same: internal search assistant for support agents, first release only for North America knowledge base, not customer-facing. Maria said accuracy target should be "good enough for assisted use" and Jason corrected that to 90 percent answer relevance on the validation set before launch.
+
+Budget note buried in another message: current approved spend cap is $750k for phase one, including vendor tooling. Someone wrote $700k in the shared doc later, but finance summary from April kept the $750k number. Need to avoid repeating the lower number unless finance changes it.
+
+Security bits from the compliance call: no production customer data in prompt logs, redact account numbers before retrieval, SSO required for every pilot user, and retention window for debug logs capped at 14 days.
+
+Timeline is messy. Engineering said prototype by end of May slipped. New target from the status thread is internal beta on September 15, then four-week pilot with 40 support agents if quality gate passes. There was also an idea about Europe rollout in Q4, but legal said do not plan that until data residency review is complete.
+
+Risks people kept mentioning:
+- source articles are outdated in some product areas
+- retrieval latency spikes when index rebuild runs
+- support agents may over-trust answers if citations look polished
+
+Not settled: whether vendor reranker is worth the cost, and whether multilingual support belongs in phase one. Definitely not approved yet for customer self-service chat.
