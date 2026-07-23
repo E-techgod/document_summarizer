@@ -4,9 +4,9 @@ from typing import TypeAlias
 
 from pydantic import ValidationError
 
-from schema import BulletsSummary, ExecutiveSummary, TechnicalSummary
+from schema import BulletsSummary, ExecutiveSummary, SummaryOutput, TechnicalSummary
 
-ParsedSummary: TypeAlias = TechnicalSummary | BulletsSummary | ExecutiveSummary
+ParsedSummary: TypeAlias = SummaryOutput | TechnicalSummary | BulletsSummary | ExecutiveSummary
 
 class SummaryParsingError(ValueError):
     """Raised when LLM summary cannot be parsed or validated"""
@@ -29,15 +29,9 @@ class SummaryParsingError(ValueError):
             requested_version=requested_version,
             example_output_keys=example_output_keys,
         )
-        
+
         try:
-            if requested_style == "technical":
-                return TechnicalSummary.model_validate(normalized_data)
-            if requested_style == "bullets":
-                return BulletsSummary.model_validate(normalized_data)
-            if requested_style == "executive":
-                return ExecutiveSummary.model_validate(normalized_data)
-            raise SummaryParsingError("Requested style is required for family-specific schema validation")
+            return SummaryOutput.model_validate(normalized_data)
         except ValidationError as error:
             raise SummaryParsingError(f"The response failed schema validation:\n{error}") from error
 
@@ -231,7 +225,29 @@ def validate_version_style(summary: ParsedSummary, requested_version: str) -> No
         raise ValueError(f"The model return the wrong summary version.\n Expected '{requested_version}' but recieved {summary.version}")
 
 
-def summary_to_text(summary: ParsedSummary, family: str) -> str:
+def _infer_summary_family(summary: ParsedSummary) -> str:
+    if isinstance(summary, SummaryOutput):
+        return summary.style
+    if isinstance(summary, TechnicalSummary):
+        return "technical"
+    if isinstance(summary, BulletsSummary):
+        return "bullets"
+    if isinstance(summary, ExecutiveSummary):
+        return "executive"
+    raise ValueError("Unable to infer summary family")
+
+
+def summary_to_text(summary: ParsedSummary, family: str | None = None) -> str:
+    family = family or _infer_summary_family(summary)
+
+    if isinstance(summary, SummaryOutput):
+        sections = [
+            summary.overview,
+            *summary.key_points,
+            *summary.risks_or_limitations,
+        ]
+        return " ".join(sections)
+
     if family == "technical":
         sections = [
             summary.overview,
@@ -254,11 +270,18 @@ def summary_to_text(summary: ParsedSummary, family: str) -> str:
     raise ValueError(f"Unsupported summary family: {family}")
 
 
-def count_summary_words(summary: ParsedSummary, family: str) -> int:
+def count_summary_words(summary: ParsedSummary, family: str | None = None) -> int:
     return len(summary_to_text(summary, family).split())
 
 
-def validate_max_words(summary: ParsedSummary, family: str, max_words: int) -> None:
+def validate_max_words(summary: ParsedSummary, family: str | int, max_words: int | None = None) -> None:
+    if isinstance(family, int):
+        max_words = family
+        family = None
+
+    if max_words is None:
+        raise ValueError("max_words is required")
+
     word_count = count_summary_words(summary, family)
 
     if word_count > max_words:

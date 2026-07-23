@@ -1,6 +1,12 @@
 from groq import Groq
 
-def summarize_document(client: Groq, system_prompt: str, user_prompt: str, model_name: str, temp) -> str:
+def summarize_document(
+    client: Groq,
+    system_prompt: str,
+    user_prompt: str,
+    model_name: str,
+    temp: float = 0.0,
+) -> str:
 
     if not system_prompt.strip():
         raise ValueError("System prompt cannot be empty")

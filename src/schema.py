@@ -6,6 +6,17 @@ SUMMARY_STYLE = Literal["bullets", "executive", "technical"]
 SUMMARY_FAMILY = SUMMARY_STYLE
 
 
+class SummaryOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1)
+    style: SUMMARY_STYLE
+    version: str = Field(min_length=1)
+    overview: str = Field(min_length=1)
+    key_points: list[str] = Field(min_length=1)
+    risks_or_limitations: list[str] = Field(default_factory=list)
+
+
 class TechnicalSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
