@@ -1,66 +1,76 @@
 # Document-summarizer
 
 A small pipeline that turns a `.txt` document into an audience-tailored summary
-using the Groq API. Load a document, pick a prompt style, render it into a
-Jinja2 template, send it to the model, validate the structured response, print
-the result, and save the final summary as a `.json` file.
+using the Groq API. Load a document, pick a prompt family and version, render
+it into a Jinja2 template, send it to the model, validate the structured
+response, and save the result as a `.json` file. The repo also includes an
+evaluation harness for comparing prompt versions across test cases.
 
-This is the first version of the pipeline:
+This is the current single-document pipeline in `src/main.py`:
 
 ```
 Load document
       ↓
 Load selected prompt template
       ↓
-Render document into the template
+Build the prompt contract
+      ↓
+Render document + output instructions into the template
       ↓
 Call the model
       ↓
-Parse and validate JSON summary
+Parse and normalize JSON response
+      ↓
+Validate against the requested family schema
       ↓
 Write validated summary to `.json`
       ↓
-Print validated summary + saved path + word count
+Print rendered prompt + validated summary + saved path + word count
 ```
 
 Only `.txt` files are supported for now — no PDFs, no Word docs.
 
 ## Summary styles
 
-The system prompt keeps every style grounded to the source document (no
-invented facts, missing info called out explicitly), and each style prompt
-narrows that down for a different reader:
+The system prompt keeps every style grounded to the source document, and each
+prompt family narrows that down for a different reader:
 
 - **executive** — for a C-suite audience: overview, key technical/business
-  points, risks or missing info. Concise, non-technical framing.
+  points, risks or missing info.
 - **technical** — for engineers: overview, key technical points, risks or
-  limitations. Precise, deterministic language.
-- **bullets** — for a non-technical/beginner audience: 10 bullet points
-  covering the same three areas, casual tone.
+  limitations.
+- **bullets** — a bullet-list version for a non-technical or beginner reader.
 
-All three are capped at 250 words. After the model responds, `main.py` parses
-the JSON, validates it against a Pydantic schema, checks that the returned
-style matches the requested style, enforces the 250-word cap, and requires at
-least one `key_points` item.
+There are three prompt versions for each family: `v1`, `v2`, and `v3`.
+The current hardcoded run in `src/main.py` uses the **technical** family with
+prompt version **v1** and a 250-word limit.
 
 ## JSON output format
 
-The model is prompted to return only valid JSON, and that JSON must match the
-same structure enforced by the schema:
+The code currently has two JSON shapes in play.
+
+`src/main.py` injects JSON instructions with this shared shape:
 
 ```json
 {
   "title": "string",
   "style": "bullets | executive | technical",
+  "version": "v1 | v2 | v3",
   "overview": "string",
   "key_points": ["string"],
   "risks_or_limitations": ["string"]
 }
 ```
 
-The `style` field is the summary format identifier and must exactly match the
-requested style from the prompt. The combined text inside `overview`,
-`key_points`, and `risks_or_limitations` must stay within the 250-word limit.
+The family schemas in `src/schema.py` are narrower:
+
+- `technical` expects `overview`, `key_technical_points`,
+  `risks_or_limitations`, `style`
+- `bullets` expects `bullets`, `style`
+- `executive` expects `overview`, `key_technical_and_business_points`,
+  `risks_limitations_or_missing_information`, `style`
+
+The evaluation pipeline uses those family-specific shapes directly.
 
 ## Setup
 
@@ -84,9 +94,10 @@ Run the automated test suite with:
 uv run pytest -q
 ```
 
-The current tests cover schema validation, JSON parsing failures, prompt
-rendering, style enforcement, word-limit validation, and the main workflow with
-mocked dependencies.
+Current test count: `31` collected tests in `tests/test_document_summarizer.py`.
+The suite covers schema validation, JSON parsing failures, prompt rendering,
+versioned prompt loading, normalization of alternate response shapes, and the
+main workflow with mocked dependencies.
 
 ## Running it
 
@@ -94,14 +105,16 @@ mocked dependencies.
 uv run src/main.py
 ```
 
-Right now the entry point is hardcoded, not wired up to CLI arguments yet:
-it always summarizes `sample_documents/sample.txt` using the **bullets**
-style, with `llama-3.1-8b-instant` as the model. Swap the style by editing
-the `SUMMARY_STYLE` constant in `main.py`, or point `DOCUMENT_PATH` at a different
-`.txt` file, until argument parsing lands.
+Right now the entry point is still hardcoded, not wired up to CLI arguments
+yet: it targets `sample_documents/sample.txt`, uses the **technical** family,
+prompt version **v1**, `llama-3.1-8b-instant`, and `TEMPERATURE = 0.0`.
+Swap the family by editing `SUMMARY_STYLE`, the prompt version by editing
+`SUMMARY_VERSION`, or point `DOCUMENT_PATH` at a different `.txt` file until
+argument parsing lands.
 
-During a run, `main.py` currently prints the rendered user prompt, the validated
-JSON summary, the saved output path, and the final summary word count.
+During a run, `main.py` is wired to print the rendered user prompt, then the
+validated summary JSON, saved output path, and final word count after
+validation.
 
 The generated summary is also written to a version-specific folder:
 
@@ -117,20 +130,15 @@ summary_output_json/v1/technical_v1_summary.json
 
 ## Project layout
 
-- `src/main.py` — entry point; wires the pipeline together with hardcoded
-  defaults for the current run.
-- `src/document_loader.py` — reads and validates the source `.txt` file.
-- `src/prompt_manager.py` — loads the system prompt and the chosen style
-  template, renders the document into it via Jinja2.
-- `src/llm_client.py` — builds the Groq client from `GROQ_API_KEY`.
-- `src/summarizer.py` — sends the prompts to Groq and returns the summary.
-- `src/output_parser.py` — parses the model's JSON output, validates it
-  against the schema, checks style, and enforces the word cap.
-- `src/schema.py` — defines the structured summary shape with Pydantic.
-- `summary_output_json/` — stores generated summary `.json` files grouped by
-  version (`v1/`, `v2/`, `v3/`).
-- `prompts/` — system prompt and the three user-prompt style templates.
-- `sample_documents/sample.txt` — the sample input used by the current
+- `src/main.py` is the single-document entry point.
+- `evaluations/run_eval.py` is the evaluation entry point.
+- `src/` holds the runtime pipeline, parser, schemas, and evaluation logic.
+- `prompts/` holds the system prompt and versioned family prompts under
+  `v1/`, `v2/`, and `v3/`.
+- `summary_output_json/` stores generated summary `.json` files grouped by
+  prompt version.
+- `evaluations/` holds evaluation documents, cases, and saved results.
+- `sample_documents/sample.txt` is the sample input used by the current
   hardcoded run.
 
 ## Status
@@ -138,4 +146,7 @@ summary_output_json/v1/technical_v1_summary.json
 - No CLI argument handling yet (planned: pick a file or paste text directly,
   pick a style at the command line).
 - `src/templates/summary_template.py` is currently unused.
+- The main path and the parser layer have drifted: `src/main.py` still calls
+  `validate_max_words` and `count_summary_words` with the older argument list,
+  while `src/output_parser.py` now expects the summary family as well.
 - Automated tests are in `tests/test_document_summarizer.py`.
