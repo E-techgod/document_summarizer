@@ -44,6 +44,7 @@ def valid_summary_payload():
     return {
         "title": "API Integration Summary",
         "style": "bullets",
+        "version": "v2",
         "overview": "This document explains how the integration works.",
         "key_points": [
             "Requests are authenticated with an API key.",
@@ -178,6 +179,14 @@ def test_count_summary_words_counts_only_meaningful_sections(output_parser_modul
     assert word_count == expected
 
 
+def test_build_summary_output_path_groups_files_by_version(main_module):
+    output_path = main_module.build_summary_output_path("bullets", "v2")
+
+    assert output_path == (
+        PROJECT_ROOT / "summary_output_json" / "v2" / "bullets_v2_summary.json"
+    )
+
+
 def test_build_user_prompt_renders_all_required_inputs(prompt_manager_module):
     template = (
         "STYLE={{ style }}\n"
@@ -190,14 +199,16 @@ def test_build_user_prompt_renders_all_required_inputs(prompt_manager_module):
         user_template=template,
         document_text="Important source text.",
         style="bullets",
+        version="v2",
         max_words=250,
-        output_instructions='{"style": "{{ style }}", "limit": {{ max_words }}}',
+        output_instructions='{"style": "{{ style }}", "version": "{{ version }}", "limit": {{ max_words }}}',
     )
 
     assert "STYLE=bullets" in prompt
     assert "MAX=250" in prompt
     assert "DOC=Important source text." in prompt
     assert '"style": "bullets"' in prompt
+    assert '"version": "v2"' in prompt
     assert '"limit": 250' in prompt
     assert "{{" not in prompt
     assert "}}" not in prompt
@@ -208,6 +219,7 @@ def test_build_user_prompt_strips_document_edges(prompt_manager_module):
         user_template="DOC={{ document_text }}",
         document_text="  text with padding  ",
         style="bullets",
+        version="v2",
         max_words=250,
         output_instructions="ignored",
     )
@@ -223,11 +235,13 @@ def test_real_prompt_templates_include_rendered_json_output_instructions(prompt_
         user_template=user_template,
         document_text="Source material.",
         style=style,
+        version="v1",
         max_words=250,
-        output_instructions='{"style": "{{ style }}", "limit": {{ max_words }}}',
+        output_instructions='{"style": "{{ style }}", "version": "{{ version }}", "limit": {{ max_words }}}',
     )
 
     assert '"style": "' + style + '"' in prompt
+    assert '"version": "v1"' in prompt
     assert '"limit": 250' in prompt
     assert "{{ output_instructions }}" not in prompt
     assert "{{ style }}" not in prompt
@@ -244,9 +258,67 @@ def test_build_user_prompt_propagates_render_failures(prompt_manager_module, mon
             user_template="DOC={{ document_text }}",
             document_text="payload",
             style="bullets",
+            version="v2",
             max_words=250,
             output_instructions="unused",
         )
+
+
+def test_parse_summary_response_extracts_json_after_thinking_block(output_parser_module):
+    response = """
+<thinking>
+- Fact 1
+- Fact 2
+</thinking>
+{
+  "title": "Parsed Summary",
+  "style": "bullets",
+  "version": "v2",
+  "overview": "Overview text.",
+  "key_points": ["Point A", "Point B"],
+  "risks_or_limitations": ["Risk A"]
+}
+"""
+
+    summary = output_parser_module.SummaryParsingError.parse_summary_response(
+        response,
+        requested_style="bullets",
+        requested_version="v2",
+    )
+
+    assert summary.title == "Parsed Summary"
+    assert summary.version == "v2"
+
+
+def test_parse_summary_response_normalizes_prompt_specific_shape(output_parser_module):
+    response = json.dumps(
+        {
+            "overview": "PaymentsAPI v2.3 adds mandatory idempotency keys.",
+            "key_technical_points": [
+                "Idempotency key required on POST /charges as of v2.3",
+                "Missing key returns HTTP 400",
+            ],
+            "risks_or_limitations": [
+                "Migration guide not yet published",
+            ],
+            "style": "technical",
+        }
+    )
+
+    summary = output_parser_module.SummaryParsingError.parse_summary_response(
+        response,
+        requested_style="technical",
+        requested_version="v3",
+        example_output_keys=("overview", "key_technical_points", "risks_or_limitations", "style"),
+    )
+
+    assert summary.style == "technical"
+    assert summary.version == "v3"
+    assert summary.key_points == [
+        "Idempotency key required on POST /charges as of v2.3",
+        "Missing key returns HTTP 400",
+    ]
+    assert summary.risks_or_limitations == ["Migration guide not yet published"]
 
 
 def test_write_summary_json_persists_validated_payload(main_module, valid_summary_payload, tmp_path):
@@ -263,7 +335,12 @@ def test_write_summary_json_persists_validated_payload(main_module, valid_summar
 def test_build_summary_output_path_uses_style_name(main_module):
     output_path = main_module.build_summary_output_path("executive", "v2")
 
-    assert output_path == main_module.PROJECT_DIRECTORY / "summary_output_json" / "executive_v2_summary.json"
+    assert output_path == (
+        main_module.PROJECT_DIRECTORY
+        / "summary_output_json"
+        / "v2"
+        / "executive_v2_summary.json"
+    )
 
 
 def test_get_prompt_version_reads_version_from_template_filename(main_module):
@@ -290,11 +367,11 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
     monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: calls.append(("template", style, version)) or "Prompt {{ document_text }}")
     monkeypatch.setattr(
         main_module,
-        "build_user_prompt",
-        lambda template, document_text, style, max_words, output_instructions: calls.append(
-            ("prompt", template, document_text, style, max_words, output_instructions)
+        "build_prompt_contract",
+        lambda user_template, document_text, style, version, max_words, output_instructions: calls.append(
+            ("prompt", user_template, document_text, style, version, max_words, output_instructions)
         )
-        or "Rendered prompt",
+        or types.SimpleNamespace(rendered_prompt="Rendered prompt", example_output_keys=("title", "style")),
     )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: calls.append(("system",)) or "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: calls.append(("client",)) or object())
@@ -309,7 +386,12 @@ def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monke
     monkeypatch.setattr(
         main_module.SummaryParsingError,
         "parse_summary_response",
-        staticmethod(lambda response: calls.append(("parse", response)) or summary),
+        staticmethod(
+            lambda response, requested_style=None, requested_version=None, example_output_keys=(): calls.append(
+                ("parse", response, requested_style, requested_version, example_output_keys)
+            )
+            or summary
+        ),
     )
     monkeypatch.setattr(main_module, "validate_request_style", lambda parsed_summary, requested_style: calls.append(("style", parsed_summary.style, requested_style)))
     monkeypatch.setattr(main_module, "validate_max_words", lambda parsed_summary, max_words: calls.append(("words", max_words)))
@@ -347,7 +429,7 @@ def test_main_stops_after_document_loading_failure(main_module, monkeypatch):
 
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: (_ for _ in ()).throw(FileNotFoundError("missing document")))
     monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: downstream_calls.append("template"))
-    monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: downstream_calls.append("prompt"))
+    monkeypatch.setattr(main_module, "build_prompt_contract", lambda *args, **kwargs: downstream_calls.append("prompt"))
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: downstream_calls.append("system"))
     monkeypatch.setattr(main_module, "create_client_groq", lambda: downstream_calls.append("client"))
 
@@ -360,7 +442,7 @@ def test_main_stops_after_document_loading_failure(main_module, monkeypatch):
 def test_main_propagates_prompt_rendering_value_error(main_module, monkeypatch):
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
     monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
-    monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("render failed")))
+    monkeypatch.setattr(main_module, "build_prompt_contract", lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("render failed")))
 
     with pytest.raises(ValueError, match="render failed"):
         main_module.main()
@@ -369,14 +451,18 @@ def test_main_propagates_prompt_rendering_value_error(main_module, monkeypatch):
 def test_main_propagates_summary_parsing_error(main_module, monkeypatch):
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
     monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
-    monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: "Rendered prompt")
+    monkeypatch.setattr(
+        main_module,
+        "build_prompt_contract",
+        lambda *args, **kwargs: types.SimpleNamespace(rendered_prompt="Rendered prompt", example_output_keys=()),
+    )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
     monkeypatch.setattr(main_module, "summarize_document", lambda *args, **kwargs: "not json")
     monkeypatch.setattr(
         main_module.SummaryParsingError,
         "parse_summary_response",
-        staticmethod(lambda response: (_ for _ in ()).throw(main_module.SummaryParsingError("invalid response"))),
+        staticmethod(lambda response, **kwargs: (_ for _ in ()).throw(main_module.SummaryParsingError("invalid response"))),
     )
 
     with pytest.raises(main_module.SummaryParsingError, match="invalid response"):
@@ -389,14 +475,18 @@ def test_main_does_not_write_json_when_style_validation_fails(main_module, monke
 
     monkeypatch.setattr(main_module, "load_and_validate_document", lambda path: "Loaded document")
     monkeypatch.setattr(main_module, "load_prompt_user_template", lambda style, version: "Prompt template")
-    monkeypatch.setattr(main_module, "build_user_prompt", lambda *args, **kwargs: "Rendered prompt")
+    monkeypatch.setattr(
+        main_module,
+        "build_prompt_contract",
+        lambda *args, **kwargs: types.SimpleNamespace(rendered_prompt="Rendered prompt", example_output_keys=()),
+    )
     monkeypatch.setattr(main_module, "load_system_prompr", lambda: "System prompt")
     monkeypatch.setattr(main_module, "create_client_groq", lambda: object())
     monkeypatch.setattr(main_module, "summarize_document", lambda *args, **kwargs: '{"title":"unused"}')
     monkeypatch.setattr(
         main_module.SummaryParsingError,
         "parse_summary_response",
-        staticmethod(lambda response: summary),
+        staticmethod(lambda response, **kwargs: summary),
     )
     monkeypatch.setattr(
         main_module,

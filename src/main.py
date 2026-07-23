@@ -24,7 +24,7 @@ from summarizer import summarize_document
 from document_loader import load_and_validate_document
 from templates.summary_json_structure_template import JSON_OUTPUT_INSTRUCTIONS
 from templates.prompt_template_files import PROMPT_TEMPLATE_FILES
-from prompt_manager import load_system_prompr, load_prompt_user_template, build_user_prompt
+from prompt_manager import load_system_prompr, load_prompt_user_template, build_prompt_contract
 from output_parser import SummaryParsingError, validate_request_style, count_summary_words, validate_max_words
 
 PROJECT_DIRECTORY= Path(__file__).parent.parent 
@@ -34,7 +34,7 @@ DOCUMENT_PATH= PROJECT_DIRECTORY / DOCS_DIRECTORY / DOCUMENT_FILE
 MODEL_NAME= "llama-3.1-8b-instant"
 MAX_WORDS= 250
 SUMMARY_STYLE="bullets" # Options: "bullets", "executive", "technical"
-SUMMARY_VERSION= "v2" # Options: "v1", "v2", "v3"
+SUMMARY_VERSION= "v3" # Options: "v1", "v2", "v3"
 
 
 def get_prompt_version(style: str, version: str) -> str:
@@ -50,7 +50,7 @@ def get_prompt_version(style: str, version: str) -> str:
 
 def build_summary_output_path(style: str, version: str) -> Path:
     version = get_prompt_version(style, version)
-    return PROJECT_DIRECTORY / "summary_output_json" / f"{style}_{version}_summary.json"
+    return PROJECT_DIRECTORY / "summary_output_json" / version / f"{style}_{version}_summary.json"
 
 def write_summary_json(summary: SummaryOutput, output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -66,7 +66,15 @@ def main():
 
     # print(f"\n========================================================= RAW TEMPLATE: {SUMMARY_STYLE} =========================================================\n {user_template}")
 
-    user_prompt = build_user_prompt(user_template, document_text, SUMMARY_STYLE, MAX_WORDS, JSON_OUTPUT_INSTRUCTIONS) # User prompt (different versions) + the document (the placeholder is now filled with the the actual doc)
+    prompt_contract = build_prompt_contract(
+        user_template=user_template,
+        document_text=document_text,
+        style=SUMMARY_STYLE,
+        version=SUMMARY_VERSION,
+        max_words=MAX_WORDS,
+        output_instructions=JSON_OUTPUT_INSTRUCTIONS,
+    )
+    user_prompt = prompt_contract.rendered_prompt
 
     print(f"\n========================================================= RENDERED USER PROMPT =========================================================\n {user_prompt}")
 
@@ -78,7 +86,12 @@ def main():
 
     raw_reponse= summarize_document(client, system_prompt, user_prompt, MODEL_NAME)
 
-    summary= SummaryParsingError.parse_summary_response(raw_reponse)
+    summary= SummaryParsingError.parse_summary_response(
+        raw_reponse,
+        requested_style=SUMMARY_STYLE,
+        requested_version=SUMMARY_VERSION,
+        example_output_keys=prompt_contract.example_output_keys,
+    )
 
     validate_request_style(summary, SUMMARY_STYLE)
 

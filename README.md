@@ -103,16 +103,16 @@ the `SUMMARY_STYLE` constant in `main.py`, or point `DOCUMENT_PATH` at a differe
 During a run, `main.py` currently prints the rendered user prompt, the validated
 JSON summary, the saved output path, and the final summary word count.
 
-The generated summary is also written to:
+The generated summary is also written to a version-specific folder:
 
 ```text
-summary_output_json/<style>_<version>_summary.json
+summary_output_json/<version>/<style>_<version>_summary.json
 ```
 
 Example for the current hardcoded sample:
 
 ```text
-summary_output_json/technical_v1_summary.json
+summary_output_json/v1/technical_v1_summary.json
 ```
 
 ## Project layout
@@ -127,7 +127,8 @@ summary_output_json/technical_v1_summary.json
 - `src/output_parser.py` — parses the model's JSON output, validates it
   against the schema, checks style, and enforces the word cap.
 - `src/schema.py` — defines the structured summary shape with Pydantic.
-- `summary_output_json/` — stores generated summary `.json` files.
+- `summary_output_json/` — stores generated summary `.json` files grouped by
+  version (`v1/`, `v2/`, `v3/`).
 - `prompts/` — system prompt and the three user-prompt style templates.
 - `sample_documents/sample.txt` — the sample input used by the current
   hardcoded run.
