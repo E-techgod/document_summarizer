@@ -118,7 +118,7 @@ main workflow with mocked dependencies.
 
 I could not re-verify the old collected-count claim on July 23, 2026 because
 `pytest` is not installed in the current environment. The visible test file
-contains `29` test functions.
+contains `31` test functions.
 
 ## Running it
 
@@ -179,7 +179,4 @@ summary_output_json/v1/technical_v1_summary.json
 - `src/main.py` still calls `validate_max_words(summary, MAX_WORDS)`, and
   `src/output_parser.py` handles that older call style by treating an integer
   second argument as `max_words`.
-- Build configuration is mixed: the active backend is Hatchling, while
-  `[tool.setuptools].py-modules` is present but not used by the current build
-  backend.
 - Automated tests are in `tests/test_document_summarizer.py`.
