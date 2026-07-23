@@ -17,14 +17,18 @@ CONSTRAINTS:
 - Preserve important numbers and technical terms.
 - State when information is missing.
 - Keep it under 250 words.
+- The requested summary format identifier is "{{ style }}".
+- In the JSON output, the "style" field must be exactly "{{ style }}"; it must not describe tone, audience, or difficulty level.
 
 USE THIS WHEN: Your audience is a technical engineer who need the technical version
 
 OUTPUT FORMAT: 
-Return:
+Return the following content inside the required JSON structure:
 1. Overview
 2. Key technical points 
 3. Risks or limitations
+
+{{ output_instructions }}
 
 DOCUMENT:
 <document>

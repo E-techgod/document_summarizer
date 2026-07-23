@@ -9,6 +9,7 @@ wheels/
 graphify-out/
 llm_context_payload.txt
 README_FACTS.md
+*.json
 
 # Virtual environments
 .venv

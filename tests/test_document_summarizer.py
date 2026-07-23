@@ -216,6 +216,24 @@ def test_build_user_prompt_strips_document_edges(prompt_manager_module):
     assert prompt == "DOC=text with padding"
 
 
+@pytest.mark.parametrize("style", ["bullets", "executive", "technical"])
+def test_real_prompt_templates_include_rendered_json_output_instructions(prompt_manager_module, style):
+    user_template = prompt_manager_module.load_prompt_user_template(style)
+
+    prompt = prompt_manager_module.build_user_prompt(
+        user_template=user_template,
+        document_text="Source material.",
+        style=style,
+        max_words=250,
+        output_instructions='{"style": "{{ style }}", "limit": {{ max_words }}}',
+    )
+
+    assert '"style": "' + style + '"' in prompt
+    assert '"limit": 250' in prompt
+    assert "{{ output_instructions }}" not in prompt
+    assert "{{ style }}" not in prompt
+
+
 def test_build_user_prompt_propagates_render_failures(prompt_manager_module, monkeypatch):
     def broken_renderer(*_args, **_kwargs):
         raise ValueError("output instructions failed")
@@ -241,6 +259,12 @@ def test_write_summary_json_persists_validated_payload(main_module, valid_summar
     assert written_path == output_path
     assert output_path.exists()
     assert json.loads(output_path.read_text(encoding="utf-8")) == valid_summary_payload
+
+
+def test_build_summary_output_path_uses_style_name(main_module):
+    output_path = main_module.build_summary_output_path("executive")
+
+    assert output_path == main_module.PROJECT_DIRECTORY / "summary_output_json" / "executive_summary.json"
 
 
 def test_main_runs_complete_workflow_with_mocked_dependencies(main_module, monkeypatch, valid_summary_payload, capsys):
