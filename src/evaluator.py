@@ -29,6 +29,31 @@ class EvaluationResult(BaseModel):
     bullet_count_correct: bool | None = None
 
 
+def calculate_score(result: EvaluationResult) -> float:
+    score = 0.0
+
+    if result.valid_json:
+        score += 15
+
+    if result.valid_schema:
+        score += 15
+
+    if result.correct_style:
+        score += 10
+
+    if result.within_word_limit:
+        score += 15
+
+    if result.required_facts_total > 0:
+        coverage_ratio = result.required_facts_found / result.required_facts_total
+        score += 30 * coverage_ratio
+
+    if result.forbidden_claims_found == 0:
+        score += 15
+
+    return round(score, 2)
+
+
 def parse_json_response(response_text: str) -> dict[str, Any]:
     parsed = json.loads(response_text)
     if not isinstance(parsed, dict):
